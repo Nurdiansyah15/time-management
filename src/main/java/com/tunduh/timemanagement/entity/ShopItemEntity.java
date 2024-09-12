@@ -7,6 +7,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 import java.util.Set;
+import java.util.UUID;
 
 @Entity
 @Data
@@ -15,8 +16,8 @@ import java.util.Set;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@Table(name = "users")
-public class UserEntity {
+@Table(name = "shop_item")
+public class ShopItemEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -25,17 +26,11 @@ public class UserEntity {
     @Column(nullable = false)
     private String name;
 
-    @Column(nullable = false, unique = true)
-    private String email;
+    @Column(name = "item_picture")
+    private String itemPicture;
 
     @Column(nullable = false)
-    private String password;
-
-    @Column(name = "profile_picture")
-    private String profilePicture;
-
-    @Column(name = "user_point")
-    private Integer userPoint;
+    private Integer price;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -45,13 +40,7 @@ public class UserEntity {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    @OneToMany(mappedBy = "user")
-    private Set<TaskEntity> tasks;
-
-    @ManyToMany(mappedBy = "users")
-    private Set<MissionEntity> missions;
-
-    @OneToMany(mappedBy = "user")
+    @OneToMany(mappedBy = "shopItem")
     private Set<UserTransactionEntity> transactions;
-}
 
+}
