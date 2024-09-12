@@ -1,6 +1,7 @@
 package com.tunduh.timemanagement.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -27,8 +28,8 @@ public class UserEntity implements UserDetails {
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
-    @Column(nullable = false)
-    private String name;
+    @Column(unique = true)
+    private String username;
 
     @Column(nullable = false, unique = true)
     private String email;
@@ -65,11 +66,6 @@ public class UserEntity implements UserDetails {
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return Collections.singletonList(new SimpleGrantedAuthority(role.name()));
-    }
-
-    @Override
-    public String getUsername() {
-        return this.email;
     }
 
     @Override
