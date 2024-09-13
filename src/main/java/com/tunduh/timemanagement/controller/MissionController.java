@@ -3,9 +3,12 @@ package com.tunduh.timemanagement.controller;
 import com.tunduh.timemanagement.dto.request.MissionRequest;
 import com.tunduh.timemanagement.dto.response.MissionResponse;
 import com.tunduh.timemanagement.service.MissionService;
+import com.tunduh.timemanagement.utils.pagination.CustomPagination;
 import com.tunduh.timemanagement.utils.response.Response;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -26,12 +29,27 @@ public class MissionController {
         return Response.renderJSON(createdMission, "Mission created successfully!");
     }
 
+//    @GetMapping
+//    public ResponseEntity<?> getAllMissions(Authentication authentication) {
+//        String userId = authentication.getName();
+//        List<MissionResponse> missions = missionService.getAllMissions(userId);
+//        return Response.renderJSON(missions);
+//    }
+
     @GetMapping
-    public ResponseEntity<?> getAllMissions(Authentication authentication) {
+    public ResponseEntity<CustomPagination<MissionResponse>> getAllMissions(
+            Authentication authentication,
+            @PageableDefault Pageable pageable,
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String progress,
+            @RequestParam(required = false) String status) {
+
         String userId = authentication.getName();
-        List<MissionResponse> missions = missionService.getAllMissions(userId);
-        return Response.renderJSON(missions);
+        CustomPagination<MissionResponse> paginatedMissions = missionService.getAllMissions(pageable, name, progress, status);
+
+        return ResponseEntity.ok(paginatedMissions);
     }
+
 
     @GetMapping("/{id}")
     public ResponseEntity<?> getMissionById(@PathVariable String id) {

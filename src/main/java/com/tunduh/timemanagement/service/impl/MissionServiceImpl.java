@@ -8,8 +8,14 @@ import com.tunduh.timemanagement.exception.ResourceNotFoundException;
 import com.tunduh.timemanagement.repository.MissionRepository;
 import com.tunduh.timemanagement.repository.UserRepository;
 import com.tunduh.timemanagement.service.MissionService;
+import com.tunduh.timemanagement.utils.pagination.CustomPagination;
+import com.tunduh.timemanagement.utils.specification.MissionSpecification;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -46,12 +52,31 @@ public class MissionServiceImpl implements MissionService {
     }
 
     @Override
-    public List<MissionResponse> getAllMissions(String userId) {
-        List<MissionEntity> missions = missionRepository.findByUsersId(userId);
-        return missions.stream()
+    public CustomPagination<MissionResponse> getAllMissions(Pageable pageable, String name, String progress, String status) {
+        Specification<MissionEntity> specification = MissionSpecification.getSpecification(name, progress, status);
+        Page<MissionEntity> missionPage = missionRepository.findAll(specification, pageable);
+
+        List<MissionResponse> missionResponses = missionPage.getContent().stream()
                 .map(this::mapToMissionResponse)
                 .collect(Collectors.toList());
+
+        Page<MissionResponse> responsePage = new PageImpl<>(
+                missionResponses,
+                pageable,
+                missionPage.getTotalElements()
+        );
+
+        return new CustomPagination<>(responsePage);
     }
+
+
+//    @Overide
+//    public List<MissionResponse> getAllMissions(String userId) {
+//        List<MissionEntity> missions = missionRepository.findByUsersId(userId);
+//        return missions.stream()
+//                .map(this::mapToMissionResponse)
+//                .collect(Collectors.toList());
+//    }
 
     @Override
     public MissionResponse getMissionById(String id) {
