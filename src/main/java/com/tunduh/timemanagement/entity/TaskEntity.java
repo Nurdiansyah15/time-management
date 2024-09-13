@@ -31,7 +31,7 @@ public class TaskEntity {
     private Integer energy;
 
     @Column(nullable = false)
-    private String repetitionDuration;
+    private String repetitionConfig;
 
     @Column(columnDefinition = "TEXT")
     private String notes;
@@ -59,12 +59,4 @@ public class TaskEntity {
     @ManyToOne
     @JoinColumn(name = "user_id")
     private UserEntity user;
-
-    @ManyToOne
-    @JoinColumn(name = "priority_id")
-    private TaskPriorityEntity taskPriority;
-
-    @ManyToOne
-    @JoinColumn(name = "repetition_id")
-    private TaskRepetitionEntity taskRepetition;
 }
