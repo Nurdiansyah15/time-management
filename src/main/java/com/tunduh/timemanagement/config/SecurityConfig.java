@@ -44,7 +44,7 @@ public class SecurityConfig {
                         .requestMatchers("/", "/error", "/webjars/**", "/login", "/oauth2/**", "/api/public/**").permitAll()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html", "/swagger-ui/index.html", "/v3/**").permitAll()
                         .requestMatchers("/actuator/**").permitAll()
-                        .anyRequest().authenticated()
+                        .anyRequest().permitAll()
                 )
                 .oauth2Login(oauth2 -> oauth2
                         .authorizationEndpoint(authorization -> authorization
