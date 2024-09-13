@@ -7,9 +7,9 @@ import lombok.Data;
 @Data
 public class MissionRequest {
 
-    @NotBlank(message = "Nama misi harus diisi")
+   @NotBlank(message = "Mission name is required")
     private String name;
 
-    @NotNull(message = "Poin misi harus diisi")
+    @NotNull(message = "Mission points must be filled")
     private Integer point;
 }
