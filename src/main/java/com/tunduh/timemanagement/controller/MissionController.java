@@ -29,13 +29,6 @@ public class MissionController {
         return Response.renderJSON(createdMission, "Mission created successfully!");
     }
 
-//    @GetMapping
-//    public ResponseEntity<?> getAllMissions(Authentication authentication) {
-//        String userId = authentication.getName();
-//        List<MissionResponse> missions = missionService.getAllMissions(userId);
-//        return Response.renderJSON(missions);
-//    }
-
     @GetMapping
     public ResponseEntity<CustomPagination<MissionResponse>> getAllMissions(
             Authentication authentication,

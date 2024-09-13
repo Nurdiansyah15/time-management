@@ -69,15 +69,6 @@ public class MissionServiceImpl implements MissionService {
         return new CustomPagination<>(responsePage);
     }
 
-
-//    @Overide
-//    public List<MissionResponse> getAllMissions(String userId) {
-//        List<MissionEntity> missions = missionRepository.findByUsersId(userId);
-//        return missions.stream()
-//                .map(this::mapToMissionResponse)
-//                .collect(Collectors.toList());
-//    }
-
     @Override
     public MissionResponse getMissionById(String id) {
         MissionEntity mission = missionRepository.findById(id)
