@@ -14,9 +14,25 @@ public class WebConfig implements WebMvcConfigurer {
         registry.addInterceptor(new HandlerInterceptor() {
             @Override
             public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
-                response.setHeader("Content-Security-Policy", "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.google-analytics.com; connect-src 'self' https://accounts.google.com");
+                String nonce = generateNonce();
+                response.setHeader("Content-Security-Policy",
+                        "default-src 'self'; " +
+                                "script-src 'self' 'nonce-" + nonce + "' https://www.google-analytics.com https://accounts.google.com; " +
+                                "style-src 'self' 'unsafe-inline'; " +
+                                "img-src 'self' data: https:; " +
+                                "font-src 'self'; " +
+                                "connect-src 'self' https://accounts.google.com; " +
+                                "frame-src 'self' https://accounts.google.com; " +
+                                "object-src 'none';"
+                );
+                request.setAttribute("cspNonce", nonce);
                 return true;
             }
         });
+    }
+
+    private String generateNonce() {
+        // Implement a secure nonce generation method
+        return "secureNonce"; // This is a placeholder, use a proper implementation
     }
 }

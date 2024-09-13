@@ -26,23 +26,27 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
     private static final Logger logger = LoggerFactory.getLogger(OAuth2AuthenticationSuccessHandler.class);
     private static final String REDIRECT_URI_PARAM_COOKIE_NAME = "oauth2_auth_request_redirect_uri";
 
-    @Autowired
-    private JwtTokenProvider tokenProvider;
-
-    @Autowired
-    private HttpCookieOAuth2AuthorizationRequestRepository httpCookieOAuth2AuthorizationRequestRepository;
+    private final JwtTokenProvider tokenProvider;
+    private final HttpCookieOAuth2AuthorizationRequestRepository httpCookieOAuth2AuthorizationRequestRepository;
 
     @Value("${app.oauth2.authorizedRedirectUris}")
     private String[] authorizedRedirectUris;
 
+    @Autowired
+    public OAuth2AuthenticationSuccessHandler(JwtTokenProvider tokenProvider,
+                                              HttpCookieOAuth2AuthorizationRequestRepository httpCookieOAuth2AuthorizationRequestRepository) {
+        this.tokenProvider = tokenProvider;
+        this.httpCookieOAuth2AuthorizationRequestRepository = httpCookieOAuth2AuthorizationRequestRepository;
+    }
+
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
                                         Authentication authentication) throws IOException, ServletException {
-        logger.info("OAuth2 Authentication Success");
+        logger.info("OAuth2 Authentication Success for user: {}", authentication.getName());
         String targetUrl = determineTargetUrl(request, response, authentication);
 
         if (response.isCommitted()) {
-            logger.warn("Response has already been committed. Unable to redirect to " + targetUrl);
+            logger.warn("Response has already been committed. Unable to redirect to {}", targetUrl);
             return;
         }
 
@@ -55,14 +59,14 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
                 .map(Cookie::getValue);
 
         if (redirectUri.isPresent() && !isAuthorizedRedirectUri(redirectUri.get())) {
-            logger.warn("Unauthorized Redirect URI: " + redirectUri.get());
+            logger.warn("Unauthorized Redirect URI: {}", redirectUri.get());
             throw new IllegalArgumentException("Sorry! We've got an Unauthorized Redirect URI and can't proceed with the authentication");
         }
 
         String targetUrl = redirectUri.orElse(getDefaultTargetUrl());
         String token = tokenProvider.createToken(authentication);
 
-        logger.info("Generated token for user: " + authentication.getName());
+        logger.info("Generated JWT token for user: {}", authentication.getName());
 
         return UriComponentsBuilder.fromUriString(targetUrl)
                 .queryParam("token", token)
@@ -80,8 +84,12 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
         return Arrays.stream(authorizedRedirectUris)
                 .anyMatch(authorizedRedirectUri -> {
                     URI authorizedURI = URI.create(authorizedRedirectUri);
-                    return authorizedURI.getHost().equalsIgnoreCase(clientRedirectUri.getHost())
-                            && authorizedURI.getPort() == clientRedirectUri.getPort();
+                    if (authorizedURI.getHost().equalsIgnoreCase(clientRedirectUri.getHost())
+                            && authorizedURI.getPort() == clientRedirectUri.getPort()) {
+                        return true;
+                    }
+                    logger.warn("Unauthorized redirect URI: {} does not match any authorized URIs", uri);
+                    return false;
                 });
     }
 }
