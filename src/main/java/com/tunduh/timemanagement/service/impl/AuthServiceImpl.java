@@ -65,6 +65,6 @@ public class AuthServiceImpl implements AuthService {
         CustomOAuth2User customOAuth2User = new CustomOAuth2User(user, Collections.emptyMap());
         Authentication authentication = new UsernamePasswordAuthenticationToken(customOAuth2User, null, customOAuth2User.getAuthorities());
         SecurityContextHolder.getContext().setAuthentication(authentication);
-        return jwtTokenProvider.createToken(authentication);
+        return jwtTokenProvider.createToken(authentication.getPrincipal().toString());
     }
 }
