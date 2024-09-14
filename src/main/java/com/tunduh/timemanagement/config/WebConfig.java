@@ -15,16 +15,18 @@ public class WebConfig implements WebMvcConfigurer {
             @Override
             public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
                 String nonce = generateNonce();
-                response.setHeader("Content-Security-Policy",
-                        "default-src 'self'; " +
-                                "script-src 'self' 'nonce-" + nonce + "' https://www.google-analytics.com https://accounts.google.com; " +
-                                "style-src 'self' 'unsafe-inline'; " +
-                                "img-src 'self' data: https:; " +
-                                "font-src 'self'; " +
-                                "connect-src 'self' https://accounts.google.com; " +
-                                "frame-src 'self' https://accounts.google.com; " +
-                                "object-src 'none';"
-                );
+//                response.setHeader("Content-Security-Policy",
+//                        "default-src 'self'; " +
+//                                "script-src 'self' 'nonce-" + nonce + "' 'sha256-4IiDsMH+GkJlxivIDNfi6qk0O5HPtzyvNwVT3Wt8TIw=' https://www.google-analytics.com https://accounts.google.com https://oauth2.googleapis.com/token; " +
+//                                "style-src 'self' 'unsafe-inline'; " +
+//                                "img-src 'self' data: https: *.cloudinary.com; " +
+//                                "font-src 'self'; " +
+//                                "connect-src 'self' https://accounts.google.com *.cloudinary.com; " +
+//                                "frame-src 'self' https://accounts.google.com; " +
+//                                "object-src 'none';"
+//                );
+
+                response.setHeader("Content-Security-Policy", "default-src *; script-src * 'unsafe-inline' 'unsafe-eval'; style-src * 'unsafe-inline'; img-src * 'unsafe-inline' data:;");
                 request.setAttribute("cspNonce", nonce);
                 return true;
             }
