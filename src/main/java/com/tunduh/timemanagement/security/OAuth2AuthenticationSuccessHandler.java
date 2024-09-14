@@ -10,7 +10,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
 import org.springframework.web.util.UriComponentsBuilder;
-
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -22,7 +21,6 @@ import java.util.Optional;
 
 @Component
 public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
-
     private static final Logger logger = LoggerFactory.getLogger(OAuth2AuthenticationSuccessHandler.class);
     private static final String REDIRECT_URI_PARAM_COOKIE_NAME = "oauth2_auth_request_redirect_uri";
     private static final String SWAGGER_REDIRECT_URL = "/swagger-ui/oauth2-redirect.html";
@@ -42,8 +40,7 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
     }
 
     @Override
-    public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
-                                        Authentication authentication) throws IOException, ServletException {
+    public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
         logger.info("OAuth2 Authentication Success Handler triggered");
         logRequestDetails(request);
         logAuthenticationDetails(authentication);
@@ -56,8 +53,8 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
             }
 
             clearAuthenticationAttributes(request, response);
-            String token = tokenProvider.createToken(authentication);
-            logger.debug("JWT token created successfully");
+            String token = tokenProvider.createTokenFromAuthentication(authentication);
+            logger.debug("JWT token created successfully: {}", token);
 
             if (isSwaggerRequest(request)) {
                 handleSwaggerRedirect(response, token);
@@ -73,9 +70,9 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
     private void handleSwaggerRedirect(HttpServletResponse response, String token) throws IOException {
         logger.debug("Handling Swagger redirect");
         String redirectUrl = UriComponentsBuilder.fromUriString(SWAGGER_REDIRECT_URL)
-                .queryParam("access_token", token)
+                .queryParam("token", token)
                 .build().toUriString();
-        logger.info("Redirecting to Swagger UI with token: {}", redirectUrl);
+        logger.debug("Swagger redirect URL: {}", redirectUrl);
         response.sendRedirect(redirectUrl);
     }
 

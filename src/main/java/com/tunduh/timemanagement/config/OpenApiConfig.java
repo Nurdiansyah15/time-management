@@ -6,16 +6,15 @@ import io.swagger.v3.oas.models.security.OAuthFlow;
 import io.swagger.v3.oas.models.security.OAuthFlows;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
+import org.springdoc.core.customizers.OpenApiCustomizer;
 import org.springdoc.core.models.GroupedOpenApi;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.oauth2.jwt.Jwt;
 
 @Configuration
 public class OpenApiConfig {
-
-    @Value("${spring.security.oauth2.client.registration.google.client-id}")
-    private String clientId;
 
     @Value("${spring.security.oauth2.client.provider.google.authorization-uri}")
     private String authorizationUrl;
@@ -25,29 +24,29 @@ public class OpenApiConfig {
 
     @Bean
     public OpenAPI customOpenAPI() {
-        final String securitySchemeName = "oauth2";
         return new OpenAPI()
                 .info(new Info().title("Time Management API").version("v1"))
                 .components(new io.swagger.v3.oas.models.Components()
-                        .addSecuritySchemes(securitySchemeName, new SecurityScheme()
+                        .addSecuritySchemes("google_oauth2", new SecurityScheme()
                                 .type(SecurityScheme.Type.OAUTH2)
                                 .flows(new OAuthFlows()
                                         .authorizationCode(new OAuthFlow()
                                                 .authorizationUrl(authorizationUrl)
                                                 .tokenUrl(tokenUrl)
-//                                                        .authorizationUrl("/oauth2/authorize")
-//                                                        .tokenUrl("/login/oauth2/code/google")
                                                 .scopes(new io.swagger.v3.oas.models.security.Scopes()
-                                                        .addString("read", "Read access")
-                                                        .addString("write", "Write access")
-                                                        .addString("email", "Access to email")
-                                                        .addString("profile", "Access to profile")
+                                                        .addString("profile", "Profile information")
+                                                        .addString("email", "Email address")
                                                 )
                                         )
                                 )
                         )
+                                .addSecuritySchemes("bearerAuth", new SecurityScheme()
+                                        .type(SecurityScheme.Type.HTTP)
+                                        .scheme("bearer")
+                                        .bearerFormat("JWT"))
                 )
-                .addSecurityItem(new SecurityRequirement().addList(securitySchemeName));
+                .addSecurityItem(new SecurityRequirement().addList("bearerAuth"))
+                .addSecurityItem(new SecurityRequirement().addList("google_oauth2"));
     }
 
     @Bean

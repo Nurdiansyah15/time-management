@@ -1,4 +1,4 @@
-package com.tunduh.timemanagement.config;
+package com.tunduh.timemanagement.controller;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
