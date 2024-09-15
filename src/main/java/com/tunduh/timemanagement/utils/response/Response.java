@@ -22,7 +22,7 @@ public class Response {
     }
 
     public static <T> ResponseEntity<?> renderJSON(String message) {
-        return renderJSON(message);
+        return renderJSON(null,message);
     }
 }
 

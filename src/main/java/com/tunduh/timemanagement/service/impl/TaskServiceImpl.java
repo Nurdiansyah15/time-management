@@ -8,20 +8,23 @@ import com.tunduh.timemanagement.exception.ResourceNotFoundException;
 import com.tunduh.timemanagement.repository.TaskRepository;
 import com.tunduh.timemanagement.repository.UserRepository;
 import com.tunduh.timemanagement.service.TaskService;
+import com.tunduh.timemanagement.utils.pagination.CustomPagination;
+import com.tunduh.timemanagement.utils.specification.TaskSpecification;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class TaskServiceImpl implements TaskService {
-
     private final TaskRepository taskRepository;
     private final UserRepository userRepository;
 
@@ -29,9 +32,8 @@ public class TaskServiceImpl implements TaskService {
     public TaskResponse createTask(TaskRequest taskRequest, String userId) {
         UserEntity user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-
         TaskEntity task = TaskEntity.builder()
-                .id(String.valueOf(UUID.randomUUID()))
+                .id(UUID.randomUUID().toString())
                 .title(taskRequest.getTitle())
                 .energy(taskRequest.getEnergy())
                 .repetitionConfig(taskRequest.getRepetitionConfig())
@@ -43,19 +45,28 @@ public class TaskServiceImpl implements TaskService {
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
                 .build();
-
         TaskEntity savedTask = taskRepository.save(task);
         return mapToTaskResponse(savedTask);
     }
 
     @Override
-    public List<TaskResponse> getAllTasks(String userId) {
-        List<TaskEntity> tasks = taskRepository.findByUserId(userId);
-        return tasks.stream()
-                .map(this::mapToTaskResponse)
-                .collect(Collectors.toList());
-    }
+    public CustomPagination<TaskResponse> getAllTasks(String userId, Pageable pageable, String title, String status) {
+        log.debug("getAllTasks called with userId: {}, pageable: {}, title: {}, status: {}", userId, pageable, title, status);
 
+        Specification<TaskEntity> spec = TaskSpecification.getSpecification(title, status, userId);
+
+        log.debug("Executing findAll with specification and pageable");
+        Page<TaskEntity> taskPage = taskRepository.findAll(spec, pageable);
+
+        log.debug("Mapping TaskEntity to TaskResponse");
+        Page<TaskResponse> taskResponsePage = taskPage.map(this::mapToTaskResponse);
+
+        log.debug("Creating CustomPagination object");
+        CustomPagination<TaskResponse> result = new CustomPagination<>(taskResponsePage);
+
+        log.debug("Returning result with {} items", result.getContent().size());
+        return result;
+    }
     @Override
     public TaskResponse getTaskById(String id) {
         TaskEntity task = taskRepository.findById(id)
@@ -66,14 +77,10 @@ public class TaskServiceImpl implements TaskService {
     @Override
     @Transactional
     public TaskResponse updateTask(String id, TaskRequest taskRequest, String userId) {
-        Optional<TaskEntity> optionalTask = Optional.ofNullable(taskRepository.findByIdAndUserId(id, userId));
-
-        if (optionalTask.isEmpty()) {
+        TaskEntity task = taskRepository.findByIdAndUserId(id, userId);
+        if (task == null) {
             throw new ResourceNotFoundException("Task not found for this user");
         }
-
-        TaskEntity task = optionalTask.get();
-
         task.setTitle(taskRequest.getTitle());
         task.setEnergy(taskRequest.getEnergy());
         task.setRepetitionConfig(taskRequest.getRepetitionConfig());
@@ -82,7 +89,6 @@ public class TaskServiceImpl implements TaskService {
         task.setDuration(taskRequest.getDuration());
         task.setPriority(taskRequest.getPriority());
         task.setUpdatedAt(LocalDateTime.now());
-
         TaskEntity updatedTask = taskRepository.save(task);
         return mapToTaskResponse(updatedTask);
     }
@@ -91,6 +97,9 @@ public class TaskServiceImpl implements TaskService {
     @Transactional
     public void deleteTask(String id, String userId) {
         TaskEntity task = taskRepository.findByIdAndUserId(id, userId);
+        if (task == null) {
+            throw new ResourceNotFoundException("Task not found for this user");
+        }
         taskRepository.delete(task);
     }
 

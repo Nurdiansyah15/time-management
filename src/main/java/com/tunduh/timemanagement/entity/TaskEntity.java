@@ -40,9 +40,6 @@ public class TaskEntity {
     private String status;
 
     @Column(nullable = false)
-    private Integer progress;
-
-    @Column(nullable = false)
     private Integer duration;
 
     @Column(nullable = false)

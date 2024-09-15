@@ -49,11 +49,11 @@ public class OpenApiConfig {
                 .addSecurityItem(new SecurityRequirement().addList("google_oauth2"));
     }
 
-    @Bean
-    public GroupedOpenApi publicApi() {
-        return GroupedOpenApi.builder()
-                .group("public")
-                .pathsToMatch("/api/**")
-                .build();
-    }
+//    @Bean
+//    public GroupedOpenApi publicApi() {
+//        return GroupedOpenApi.builder()
+//                .group("public")
+//                .pathsToMatch("/api/**")
+//                .build();
+//    }
 }
