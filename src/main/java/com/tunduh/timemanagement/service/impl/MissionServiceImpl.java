@@ -13,25 +13,26 @@ import com.tunduh.timemanagement.utils.specification.MissionSpecification;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class MissionServiceImpl implements MissionService {
-
     private final MissionRepository missionRepository;
     private final UserRepository userRepository;
 
     @Override
+    @Transactional
     public MissionResponse createMission(MissionRequest missionRequest, String userId) {
         UserEntity user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
@@ -52,27 +53,18 @@ public class MissionServiceImpl implements MissionService {
     }
 
     @Override
-    public CustomPagination<MissionResponse> getAllMissions(Pageable pageable, String name, String progress, String status) {
-        Specification<MissionEntity> specification = MissionSpecification.getSpecification(name, progress, status);
-        Page<MissionEntity> missionPage = missionRepository.findAll(specification, pageable);
+    public CustomPagination<MissionResponse> getAllMissions(String userId, int page, int size, String sort, String name, String progress, String status) {
+        Pageable pageable = createPageable(page, size, sort);
+        Specification<MissionEntity> spec = MissionSpecification.getSpecification(name, progress, status, userId);
 
-        List<MissionResponse> missionResponses = missionPage.getContent().stream()
-                .map(this::mapToMissionResponse)
-                .collect(Collectors.toList());
-
-        Page<MissionResponse> responsePage = new PageImpl<>(
-                missionResponses,
-                pageable,
-                missionPage.getTotalElements()
-        );
-
-        return new CustomPagination<>(responsePage);
+        Page<MissionEntity> missionPage = missionRepository.findAll(spec, pageable);
+        return new CustomPagination<>(missionPage.map(this::mapToMissionResponse));
     }
 
     @Override
-    public MissionResponse getMissionById(String id) {
-        MissionEntity mission = missionRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Mission not found"));
+    public MissionResponse getMissionById(String id, String userId) {
+        MissionEntity mission = missionRepository.findByIdAndUsersId(id, userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Mission not found for this user"));
         return mapToMissionResponse(mission);
     }
 
@@ -98,6 +90,29 @@ public class MissionServiceImpl implements MissionService {
         missionRepository.delete(mission);
     }
 
+    @Override
+    @Transactional
+    public MissionResponse completeMission(String id, String userId) {
+        MissionEntity mission = missionRepository.findByIdAndUsersId(id, userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Mission not found for this user"));
+
+        if ("Completed".equals(mission.getStatus())) {
+            throw new IllegalStateException("Mission is already completed");
+        }
+
+        mission.setStatus("Completed");
+        mission.setProgress("100%");
+        mission.setUpdatedAt(LocalDateTime.now());
+
+        UserEntity user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        user.setUserPoint(user.getUserPoint() + mission.getPoint());
+        userRepository.save(user);
+
+        MissionEntity completedMission = missionRepository.save(mission);
+        return mapToMissionResponse(completedMission);
+    }
+
     private MissionResponse mapToMissionResponse(MissionEntity mission) {
         return MissionResponse.builder()
                 .id(mission.getId())
@@ -108,5 +123,20 @@ public class MissionServiceImpl implements MissionService {
                 .createdAt(mission.getCreatedAt())
                 .updatedAt(mission.getUpdatedAt())
                 .build();
+    }
+
+    private Pageable createPageable(int page, int size, String sort) {
+        List<Sort.Order> orders = new ArrayList<>();
+        if (sort != null) {
+            String[] sortParams = sort.split(",");
+            for (String param : sortParams) {
+                String[] keyDirection = param.split(":");
+                String key = keyDirection[0];
+                Sort.Direction direction = keyDirection.length > 1 && keyDirection[1].equalsIgnoreCase("desc") ?
+                        Sort.Direction.DESC : Sort.Direction.ASC;
+                orders.add(new Sort.Order(direction, key));
+            }
+        }
+        return PageRequest.of(page, size, Sort.by(orders));
     }
 }
