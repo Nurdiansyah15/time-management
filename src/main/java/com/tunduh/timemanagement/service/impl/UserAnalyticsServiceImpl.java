@@ -1,8 +1,8 @@
 package com.tunduh.timemanagement.service.impl;
 
+import com.tunduh.timemanagement.dto.response.UserAnalyticsResponse;
 import com.tunduh.timemanagement.dto.response.BudgetAnalyticsResponse;
 import com.tunduh.timemanagement.dto.response.DailyTaskAnalyticsResponse;
-import com.tunduh.timemanagement.dto.response.UserAnalyticsResponse;
 import com.tunduh.timemanagement.repository.TaskRepository;
 import com.tunduh.timemanagement.repository.MissionRepository;
 import com.tunduh.timemanagement.repository.UserTransactionRepository;
@@ -14,12 +14,14 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class UserAnalyticsServiceImpl implements UserAnalyticsService {
+
     private final TaskRepository taskRepository;
     private final MissionRepository missionRepository;
     private final UserTransactionRepository userTransactionRepository;
@@ -30,44 +32,58 @@ public class UserAnalyticsServiceImpl implements UserAnalyticsService {
         long completedTasks = taskRepository.countByUserIdAndStatus(userId, "COMPLETED");
         long pendingTasks = taskRepository.countByUserIdAndStatus(userId, "PENDING");
         long completedMissions = missionRepository.countByUsersIdAndStatus(userId, "COMPLETED");
-        double totalSpent = userTransactionRepository.sumTotalPriceByUserId(userId);
+        Double totalSpent = userTransactionRepository.sumTotalPriceByUserId(userId);
 
         return UserAnalyticsResponse.builder()
                 .totalTasks(totalTasks)
                 .completedTasks(completedTasks)
                 .pendingTasks(pendingTasks)
                 .completedMissions(completedMissions)
-                .totalSpent(totalSpent)
+                .totalSpent(totalSpent != null ? totalSpent : 0.0)
                 .build();
     }
 
     @Override
     public UserAnalyticsResponse getTaskCompletionAnalytics(String userId, String period) {
         LocalDateTime startDate = getStartDate(period);
-        Map<String, Long> completionData = taskRepository.getTaskCompletionDataByUserIdAndPeriod(userId, startDate);
+        List<Map<String, Object>> completionData = taskRepository.getTaskCompletionDataByUserIdAndPeriod(userId, startDate);
+
+        Map<String, Long> formattedCompletionData = completionData.stream()
+                .collect(Collectors.toMap(
+                        m -> m.get("date").toString(),
+                        m -> (Long) m.get("count")
+                ));
 
         return UserAnalyticsResponse.builder()
-                .taskCompletionData(completionData)
+                .taskCompletionData(formattedCompletionData)
                 .build();
     }
 
     @Override
     public UserAnalyticsResponse getCompletedMissionsAnalytics(String userId) {
-        Map<String, Long> missionData = missionRepository.getCompletedMissionsByUserId(userId);
-
-        return UserAnalyticsResponse.builder()
-                .completedMissionsData(missionData)
-                .build();
+        // Implement this method based on your requirements
+        return null;
     }
 
     @Override
     public BudgetAnalyticsResponse getBudgetAnalytics(String userId) {
-        double totalSpent = userTransactionRepository.sumTotalPriceByUserId(userId);
-        Map<String, Double> spendingByCategory = userTransactionRepository.getSpendingByCategoryForUser(userId);
-        Map<String, Double> budgetForTasks = taskRepository.getBudgetSpentOnTasksForUser(userId);
+        Double totalSpent = userTransactionRepository.sumTotalPriceByUserId(userId);
+        List<Map<String, Double>> spendingByCategoryList = userTransactionRepository.getSpendingByCategoryForUser(userId);
+        Map<String, Double> spendingByCategory = spendingByCategoryList.stream()
+                .collect(Collectors.toMap(
+                        m -> (String) m.get("category"),
+                        m -> m.get("totalSpent")
+                ));
+
+        List<Map<String, Double>> budgetForTasksList = taskRepository.getBudgetSpentOnTasksForUser(userId);
+        Map<String, Double> budgetForTasks = budgetForTasksList.stream()
+                .collect(Collectors.toMap(
+                        m -> (String) m.get("status"),
+                        m -> m.get("totalEnergy")
+                ));
 
         return BudgetAnalyticsResponse.builder()
-                .totalSpent(totalSpent)
+                .totalSpent(totalSpent != null ? totalSpent : 0.0)
                 .spendingByCategory(spendingByCategory)
                 .budgetForTasks(budgetForTasks)
                 .build();
@@ -82,7 +98,6 @@ public class UserAnalyticsServiceImpl implements UserAnalyticsService {
                 .taskData(taskData)
                 .build();
     }
-
 
     private LocalDateTime getStartDate(String period) {
         LocalDateTime now = LocalDateTime.now();
