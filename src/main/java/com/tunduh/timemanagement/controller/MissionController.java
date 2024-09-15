@@ -2,6 +2,7 @@ package com.tunduh.timemanagement.controller;
 
 import com.tunduh.timemanagement.dto.request.MissionRequest;
 import com.tunduh.timemanagement.dto.response.MissionResponse;
+import com.tunduh.timemanagement.entity.UserEntity;
 import com.tunduh.timemanagement.service.MissionService;
 import com.tunduh.timemanagement.utils.pagination.CustomPagination;
 import com.tunduh.timemanagement.utils.response.Response;
@@ -24,14 +25,16 @@ public class MissionController {
     @PostMapping
     @Operation(summary = "Create a new mission")
     public ResponseEntity<?> createMission(@Valid @RequestBody MissionRequest missionRequest, Authentication authentication) {
-        String userId = authentication.getName();
+        UserEntity principal = (UserEntity) authentication.getPrincipal();
+        String userId = principal.getId();
+
         MissionResponse createdMission = missionService.createMission(missionRequest, userId);
         return Response.renderJSON(createdMission, "Mission created successfully!");
     }
 
     @GetMapping
     @Operation(summary = "Get all missions with pagination and filtering")
-    public ResponseEntity<CustomPagination<MissionResponse>> getAllMissions(
+    public ResponseEntity<?> getAllMissions(
             Authentication authentication,
             @Parameter(description = "Page number (0-based)") @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "Page size") @RequestParam(defaultValue = "10") int size,
@@ -39,15 +42,19 @@ public class MissionController {
             @Parameter(description = "Filter by name") @RequestParam(required = false) String name,
             @Parameter(description = "Filter by progress") @RequestParam(required = false) String progress,
             @Parameter(description = "Filter by status") @RequestParam(required = false) String status) {
-        String userId = authentication.getName();
+        UserEntity principal = (UserEntity) authentication.getPrincipal();
+        String userId = principal.getId();
+
         CustomPagination<MissionResponse> paginatedMissions = missionService.getAllMissions(userId, page, size, sort, name, progress, status);
-        return ResponseEntity.ok(paginatedMissions);
+        return Response.renderJSON(paginatedMissions);
     }
 
     @GetMapping("/{id}")
     @Operation(summary = "Get a mission by ID")
     public ResponseEntity<?> getMissionById(@PathVariable String id, Authentication authentication) {
-        String userId = authentication.getName();
+        UserEntity principal = (UserEntity) authentication.getPrincipal();
+        String userId = principal.getId();
+
         MissionResponse mission = missionService.getMissionById(id, userId);
         return Response.renderJSON(mission);
     }
@@ -55,7 +62,9 @@ public class MissionController {
     @PutMapping("/{id}")
     @Operation(summary = "Update a mission")
     public ResponseEntity<?> updateMission(@PathVariable String id, @Valid @RequestBody MissionRequest missionRequest, Authentication authentication) {
-        String userId = authentication.getName();
+        UserEntity principal = (UserEntity) authentication.getPrincipal();
+        String userId = principal.getId();
+
         MissionResponse updatedMission = missionService.updateMission(id, missionRequest, userId);
         return Response.renderJSON(updatedMission, "Mission updated successfully!");
     }
@@ -63,7 +72,9 @@ public class MissionController {
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete a mission")
     public ResponseEntity<?> deleteMission(@PathVariable String id, Authentication authentication) {
-        String userId = authentication.getName();
+        UserEntity principal = (UserEntity) authentication.getPrincipal();
+        String userId = principal.getId();
+
         missionService.deleteMission(id, userId);
         return Response.renderJSON(null, "Mission deleted successfully!");
     }
@@ -71,7 +82,9 @@ public class MissionController {
     @PostMapping("/{id}/complete")
     @Operation(summary = "Complete a mission")
     public ResponseEntity<?> completeMission(@PathVariable String id, Authentication authentication) {
-        String userId = authentication.getName();
+        UserEntity principal = (UserEntity) authentication.getPrincipal();
+        String userId = principal.getId();
+
         MissionResponse completedMission = missionService.completeMission(id, userId);
         return Response.renderJSON(completedMission, "Mission completed successfully!");
     }

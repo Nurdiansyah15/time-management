@@ -4,6 +4,7 @@ import com.tunduh.timemanagement.dto.request.ShopItemRequest;
 import com.tunduh.timemanagement.dto.request.PurchaseRequest;
 import com.tunduh.timemanagement.dto.response.ShopItemResponse;
 import com.tunduh.timemanagement.dto.response.PurchaseResponse;
+import com.tunduh.timemanagement.entity.UserEntity;
 import com.tunduh.timemanagement.service.ShopItemService;
 import com.tunduh.timemanagement.utils.pagination.CustomPagination;
 import com.tunduh.timemanagement.utils.response.Response;
@@ -70,7 +71,8 @@ public class ShopItemController {
     @PostMapping("/{id}/purchase")
     @Operation(summary = "Purchase a shop item")
     public ResponseEntity<?> purchaseItem(@PathVariable String id, @Valid @RequestBody PurchaseRequest purchaseRequest, Authentication authentication) {
-        String userId = authentication.getName();
+        UserEntity principal = (UserEntity) authentication.getPrincipal();
+        String userId = principal.getId();
         PurchaseResponse purchaseResponse = shopItemService.purchaseItem(id, purchaseRequest.getQuantity(), userId);
         return Response.renderJSON(purchaseResponse, "Item purchased successfully!");
     }
