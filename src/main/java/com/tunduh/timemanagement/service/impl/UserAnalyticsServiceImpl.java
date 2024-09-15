@@ -1,8 +1,6 @@
 package com.tunduh.timemanagement.service.impl;
 
 import com.tunduh.timemanagement.dto.response.UserAnalyticsResponse;
-import com.tunduh.timemanagement.dto.response.BudgetAnalyticsResponse;
-import com.tunduh.timemanagement.dto.response.DailyTaskAnalyticsResponse;
 import com.tunduh.timemanagement.repository.TaskRepository;
 import com.tunduh.timemanagement.repository.MissionRepository;
 import com.tunduh.timemanagement.repository.UserTransactionRepository;
@@ -12,7 +10,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.List;
@@ -27,7 +24,7 @@ public class UserAnalyticsServiceImpl implements UserAnalyticsService {
     private final UserTransactionRepository userTransactionRepository;
 
     @Override
-    public UserAnalyticsResponse getUserAnalytics(String userId) {
+    public UserAnalyticsResponse getUserAnalyticsDashboard(String userId) {
         long totalTasks = taskRepository.countByUserId(userId);
         long completedTasks = taskRepository.countByUserIdAndStatus(userId, "COMPLETED");
         long pendingTasks = taskRepository.countByUserIdAndStatus(userId, "PENDING");
@@ -44,80 +41,56 @@ public class UserAnalyticsServiceImpl implements UserAnalyticsService {
     }
 
     @Override
-    public UserAnalyticsResponse getTaskCompletionAnalytics(String userId, String period) {
-        LocalDateTime startDate = getStartDate(period);
-        List<Map<String, Object>> completionData = taskRepository.getTaskCompletionDataByUserIdAndPeriod(userId, startDate);
+    public UserAnalyticsResponse getTaskAnalytics(String userId, LocalDate startDate, LocalDate endDate) {
+        List<Map<String, Object>> taskData = taskRepository.getTaskDataByUserIdAndDateRange(userId, startDate.atStartOfDay(), endDate.atTime(23, 59, 59));
 
-        Map<String, Long> formattedCompletionData = completionData.stream()
-                .collect(Collectors.toMap(
+        Map<String, Long> taskCompletionByDate = taskData.stream()
+                .collect(Collectors.groupingBy(
                         m -> m.get("date").toString(),
-                        m -> (Long) m.get("count")
+                        Collectors.summingLong(m -> ((Number) m.get("count")).longValue())
+                ));
+
+        Map<String, Long> taskStatusCounts = taskData.stream()
+                .collect(Collectors.groupingBy(
+                        m -> m.get("status").toString(),
+                        Collectors.summingLong(m -> ((Number) m.get("count")).longValue())
                 ));
 
         return UserAnalyticsResponse.builder()
-                .taskCompletionData(formattedCompletionData)
+                .taskCompletionByDate(taskCompletionByDate)
+                .taskStatusCounts(taskStatusCounts)
                 .build();
     }
 
     @Override
-    public UserAnalyticsResponse getCompletedMissionsAnalytics(String userId) {
-        List<Map<String, Object>> missionData = missionRepository.getCompletedMissionsByUserId(userId);
-        Map<String, Long> formattedMissionData = missionData.stream()
-                .collect(Collectors.toMap(
-                        m -> (String) m.get("status"),
-                        m -> ((Number) m.get("count")).longValue()
+    public UserAnalyticsResponse getMissionAnalytics(String userId) {
+        List<Map<String, Object>> missionData = missionRepository.getMissionDataByUserId(userId);
+
+        Map<String, Long> missionStatusCounts = missionData.stream()
+                .collect(Collectors.groupingBy(
+                        m -> m.get("status").toString(),
+                        Collectors.summingLong(m -> ((Number) m.get("count")).longValue())
                 ));
 
         return UserAnalyticsResponse.builder()
-                .completedMissionsData(formattedMissionData)
+                .missionStatusCounts(missionStatusCounts)
                 .build();
     }
 
     @Override
-    public BudgetAnalyticsResponse getBudgetAnalytics(String userId) {
-        Double totalSpent = userTransactionRepository.sumTotalPriceByUserId(userId);
-        List<Map<String, Double>> spendingByCategoryList = userTransactionRepository.getSpendingByCategoryForUser(userId);
+    public UserAnalyticsResponse getBudgetAnalytics(String userId, LocalDate startDate, LocalDate endDate) {
+        Double totalSpent = userTransactionRepository.sumTotalPriceByUserIdAndDateRange(userId, startDate.atStartOfDay(), endDate.atTime(23, 59, 59));
+        List<Map<String, Double>> spendingByCategoryList = userTransactionRepository.getSpendingByCategoryForUserAndDateRange(userId, startDate.atStartOfDay(), endDate.atTime(23, 59, 59));
+
         Map<String, Double> spendingByCategory = spendingByCategoryList.stream()
                 .collect(Collectors.toMap(
-                        m -> (String) m.get("category"),
+                        m -> m.get("category").toString(),
                         m -> m.get("totalSpent")
                 ));
 
-        List<Map<String, Double>> budgetForTasksList = taskRepository.getBudgetSpentOnTasksForUser(userId);
-        Map<String, Double> budgetForTasks = budgetForTasksList.stream()
-                .collect(Collectors.toMap(
-                        m -> (String) m.get("status"),
-                        m -> ((Number) m.get("totalEnergy")).doubleValue()
-                ));
-
-        return BudgetAnalyticsResponse.builder()
+        return UserAnalyticsResponse.builder()
                 .totalSpent(totalSpent != null ? totalSpent : 0.0)
                 .spendingByCategory(spendingByCategory)
-                .budgetForTasks(budgetForTasks)
                 .build();
-    }
-
-    @Override
-    public DailyTaskAnalyticsResponse getDailyTaskAnalytics(String userId, LocalDate date) {
-        List<Map<String, Object>> taskData = taskRepository.getDailyTaskDataForUser(userId, date);
-
-        return DailyTaskAnalyticsResponse.builder()
-                .date(date)
-                .taskData(taskData)
-                .build();
-    }
-
-    private LocalDateTime getStartDate(String period) {
-        LocalDateTime now = LocalDateTime.now();
-        switch (period.toLowerCase()) {
-            case "week":
-                return now.minusWeeks(1);
-            case "month":
-                return now.minusMonths(1);
-            case "year":
-                return now.minusYears(1);
-            default:
-                return now.minusDays(30); // Default to last 30 days
-        }
     }
 }

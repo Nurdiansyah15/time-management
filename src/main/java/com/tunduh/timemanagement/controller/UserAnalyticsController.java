@@ -1,7 +1,5 @@
 package com.tunduh.timemanagement.controller;
 
-import com.tunduh.timemanagement.dto.response.BudgetAnalyticsResponse;
-import com.tunduh.timemanagement.dto.response.DailyTaskAnalyticsResponse;
 import com.tunduh.timemanagement.dto.response.UserAnalyticsResponse;
 import com.tunduh.timemanagement.service.UserAnalyticsService;
 import com.tunduh.timemanagement.utils.response.Response;
@@ -23,55 +21,41 @@ public class UserAnalyticsController {
 
     private final UserAnalyticsService userAnalyticsService;
 
-    @GetMapping
-    @Operation(summary = "Get user analytics")
-    public ResponseEntity<?> getUserAnalytics(Authentication authentication) {
+    @GetMapping("/dashboard")
+    @Operation(summary = "Get user analytics dashboard")
+    public ResponseEntity<?> getUserAnalyticsDashboard(Authentication authentication) {
         String userId = authentication.getName();
-        UserAnalyticsResponse analytics = userAnalyticsService.getUserAnalytics(userId);
+        UserAnalyticsResponse analytics = userAnalyticsService.getUserAnalyticsDashboard(userId);
         return Response.renderJSON(analytics);
     }
 
-    @GetMapping("/tasks/completion")
-    @Operation(summary = "Get task completion analytics")
-    public ResponseEntity<?> getTaskCompletionAnalytics(
+    @GetMapping("/tasks")
+    @Operation(summary = "Get task analytics")
+    public ResponseEntity<?> getTaskAnalytics(
             Authentication authentication,
-            @RequestParam(required = false) String period) {
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
         String userId = authentication.getName();
-        UserAnalyticsResponse analytics = userAnalyticsService.getTaskCompletionAnalytics(userId, period);
+        UserAnalyticsResponse analytics = userAnalyticsService.getTaskAnalytics(userId, startDate, endDate);
         return Response.renderJSON(analytics);
     }
 
-    @GetMapping("/missions/completed")
-    @Operation(summary = "Get completed missions analytics")
-    public ResponseEntity<?> getCompletedMissionsAnalytics(Authentication authentication) {
+    @GetMapping("/missions")
+    @Operation(summary = "Get mission analytics")
+    public ResponseEntity<?> getMissionAnalytics(Authentication authentication) {
         String userId = authentication.getName();
-        UserAnalyticsResponse analytics = userAnalyticsService.getCompletedMissionsAnalytics(userId);
+        UserAnalyticsResponse analytics = userAnalyticsService.getMissionAnalytics(userId);
         return Response.renderJSON(analytics);
     }
 
     @GetMapping("/budget")
     @Operation(summary = "Get budget analytics")
-    public ResponseEntity<?> getBudgetAnalytics(Authentication authentication) {
-        String userId = authentication.getName();
-        BudgetAnalyticsResponse analytics = userAnalyticsService.getBudgetAnalytics(userId);
-        return Response.renderJSON(analytics);
-    }
-
-    @GetMapping("/budget/detailed")
-    @Operation(summary = "Get detailed budget analytics")
-    public ResponseEntity<?> getDetailedBudgetAnalytics(Authentication authentication) {
-        String userId = authentication.getName();
-        BudgetAnalyticsResponse analytics = userAnalyticsService.getBudgetAnalytics(userId);
-        return Response.renderJSON(analytics);
-    }
-
-    @GetMapping("/tasks/daily")
-    @Operation(summary = "Get daily task analytics")
-    public ResponseEntity<?> getDailyTaskAnalytics(
+    public ResponseEntity<?> getBudgetAnalytics(
             Authentication authentication,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
         String userId = authentication.getName();
-        DailyTaskAnalyticsResponse analytics = userAnalyticsService.getDailyTaskAnalytics(userId, date);
+        UserAnalyticsResponse analytics = userAnalyticsService.getBudgetAnalytics(userId, startDate, endDate);
         return Response.renderJSON(analytics);
     }
 }
