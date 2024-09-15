@@ -61,8 +61,16 @@ public class UserAnalyticsServiceImpl implements UserAnalyticsService {
 
     @Override
     public UserAnalyticsResponse getCompletedMissionsAnalytics(String userId) {
-        // Implement this method based on your requirements
-        return null;
+        List<Map<String, Object>> missionData = missionRepository.getCompletedMissionsByUserId(userId);
+        Map<String, Long> formattedMissionData = missionData.stream()
+                .collect(Collectors.toMap(
+                        m -> (String) m.get("status"),
+                        m -> ((Number) m.get("count")).longValue()
+                ));
+
+        return UserAnalyticsResponse.builder()
+                .completedMissionsData(formattedMissionData)
+                .build();
     }
 
     @Override
@@ -79,7 +87,7 @@ public class UserAnalyticsServiceImpl implements UserAnalyticsService {
         Map<String, Double> budgetForTasks = budgetForTasksList.stream()
                 .collect(Collectors.toMap(
                         m -> (String) m.get("status"),
-                        m -> m.get("totalEnergy")
+                        m -> ((Number) m.get("totalEnergy")).doubleValue()
                 ));
 
         return BudgetAnalyticsResponse.builder()

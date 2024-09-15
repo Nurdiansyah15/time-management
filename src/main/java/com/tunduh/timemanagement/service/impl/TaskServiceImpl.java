@@ -42,11 +42,13 @@ public class TaskServiceImpl implements TaskService {
                 .id(UUID.randomUUID().toString())
                 .title(taskRequest.getTitle())
                 .energy(taskRequest.getEnergy())
-                .repetitionConfig(taskRequest.getRepetitionConfig())
                 .notes(taskRequest.getNotes())
                 .status(taskRequest.getStatus())
                 .duration(taskRequest.getDuration())
                 .priority(taskRequest.getPriority())
+                .repetitionType(taskRequest.getRepetitionType())
+                .repetitionDays(taskRequest.getRepetitionDays())
+                .repetitionEndDate(taskRequest.getRepetitionEndDate())
                 .user(user)
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
@@ -88,11 +90,13 @@ public class TaskServiceImpl implements TaskService {
 
         task.setTitle(taskRequest.getTitle());
         task.setEnergy(taskRequest.getEnergy());
-        task.setRepetitionConfig(taskRequest.getRepetitionConfig());
         task.setNotes(taskRequest.getNotes());
         task.setStatus(taskRequest.getStatus());
         task.setDuration(taskRequest.getDuration());
         task.setPriority(taskRequest.getPriority());
+        task.setRepetitionType(taskRequest.getRepetitionType());
+        task.setRepetitionDays(taskRequest.getRepetitionDays());
+        task.setRepetitionEndDate(taskRequest.getRepetitionEndDate());
         task.setUpdatedAt(LocalDateTime.now());
 
         TaskEntity updatedTask = taskRepository.save(task);
@@ -114,11 +118,13 @@ public class TaskServiceImpl implements TaskService {
                 .id(UUID.fromString(task.getId()))
                 .title(task.getTitle())
                 .energy(task.getEnergy())
-                .repetitionConfig(task.getRepetitionConfig())
                 .notes(task.getNotes())
                 .status(task.getStatus())
                 .duration(task.getDuration())
                 .priority(task.getPriority())
+                .repetitionType(task.getRepetitionType())
+                .repetitionDays(task.getRepetitionDays())
+                .repetitionEndDate(task.getRepetitionEndDate())
                 .createdAt(task.getCreatedAt())
                 .updatedAt(task.getUpdatedAt())
                 .build();
