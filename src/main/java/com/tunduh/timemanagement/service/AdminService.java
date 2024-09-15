@@ -11,9 +11,9 @@ import java.util.List;
 public interface AdminService {
     SubmissionResponse createSubmission(SubmissionRequest submissionRequest);
     CustomPagination<SubmissionResponse> getAllSubmissions(int page, int size, String sort, String title, String status);
+    CustomPagination<ShopItemResponse> getAllShopItems(int page, int size, String sort, String name, Integer maxPrice);
     SubmissionResponse getSubmissionById(String id);
     SubmissionResponse updateSubmission(String id, SubmissionRequest submissionRequest);
     void deleteSubmission(String id);
     AnalyticsResponse getUserAnalytics();
-    List<ShopItemResponse> getAllShopItems();
 }

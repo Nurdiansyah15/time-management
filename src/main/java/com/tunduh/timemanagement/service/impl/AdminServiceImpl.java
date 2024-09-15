@@ -12,6 +12,7 @@ import com.tunduh.timemanagement.repository.SubmissionRepository;
 import com.tunduh.timemanagement.repository.UserRepository;
 import com.tunduh.timemanagement.service.AdminService;
 import com.tunduh.timemanagement.utils.pagination.CustomPagination;
+import com.tunduh.timemanagement.utils.specification.ShopItemSpecification;
 import com.tunduh.timemanagement.utils.specification.SubmissionSpecification;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -31,7 +32,6 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class AdminServiceImpl implements AdminService {
-
     private final SubmissionRepository submissionRepository;
     private final UserRepository userRepository;
     private final ShopItemRepository shopItemRepository;
@@ -105,10 +105,12 @@ public class AdminServiceImpl implements AdminService {
     }
 
     @Override
-    public List<ShopItemResponse> getAllShopItems() {
-        return shopItemRepository.findAll().stream()
-                .map(this::mapToShopItemResponse)
-                .collect(Collectors.toList());
+    public CustomPagination<ShopItemResponse> getAllShopItems(int page, int size, String sort, String name, Integer maxPrice) {
+        Pageable pageable = createPageable(page, size, sort);
+        Specification<ShopItemEntity> spec = ShopItemSpecification.getSpecification(name, maxPrice);
+
+        Page<ShopItemEntity> shopItemPage = shopItemRepository.findAll(spec, pageable);
+        return new CustomPagination<>(shopItemPage.map(this::mapToShopItemResponse));
     }
 
     private SubmissionResponse mapToSubmissionResponse(SubmissionEntity submission) {

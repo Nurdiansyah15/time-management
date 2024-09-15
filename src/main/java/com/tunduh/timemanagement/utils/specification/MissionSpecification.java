@@ -8,7 +8,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MissionSpecification {
-    public static Specification<MissionEntity> getSpecification(String name, String progress, String status) {
+
+    public static Specification<MissionEntity> getSpecification(String name, String progress, String status, String userId) {
         return (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
 
@@ -22,6 +23,10 @@ public class MissionSpecification {
 
             if (status != null && !status.isEmpty()) {
                 predicates.add(criteriaBuilder.like(criteriaBuilder.lower(root.get("status")), "%" + status.toLowerCase() + "%"));
+            }
+
+            if (userId != null && !userId.isEmpty()) {
+                predicates.add(criteriaBuilder.equal(root.join("users").get("id"), userId));
             }
 
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
