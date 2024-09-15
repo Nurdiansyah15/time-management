@@ -1,5 +1,7 @@
 package com.tunduh.timemanagement.service.impl;
 
+import com.tunduh.timemanagement.dto.response.BudgetAnalyticsResponse;
+import com.tunduh.timemanagement.dto.response.DailyTaskAnalyticsResponse;
 import com.tunduh.timemanagement.dto.response.UserAnalyticsResponse;
 import com.tunduh.timemanagement.repository.TaskRepository;
 import com.tunduh.timemanagement.repository.MissionRepository;
@@ -8,15 +10,16 @@ import com.tunduh.timemanagement.service.UserAnalyticsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
 public class UserAnalyticsServiceImpl implements UserAnalyticsService {
-
     private final TaskRepository taskRepository;
     private final MissionRepository missionRepository;
     private final UserTransactionRepository userTransactionRepository;
@@ -58,15 +61,28 @@ public class UserAnalyticsServiceImpl implements UserAnalyticsService {
     }
 
     @Override
-    public UserAnalyticsResponse getBudgetAnalytics(String userId) {
+    public BudgetAnalyticsResponse getBudgetAnalytics(String userId) {
         double totalSpent = userTransactionRepository.sumTotalPriceByUserId(userId);
         Map<String, Double> spendingByCategory = userTransactionRepository.getSpendingByCategoryForUser(userId);
+        Map<String, Double> budgetForTasks = taskRepository.getBudgetSpentOnTasksForUser(userId);
 
-        return UserAnalyticsResponse.builder()
+        return BudgetAnalyticsResponse.builder()
                 .totalSpent(totalSpent)
                 .spendingByCategory(spendingByCategory)
+                .budgetForTasks(budgetForTasks)
                 .build();
     }
+
+    @Override
+    public DailyTaskAnalyticsResponse getDailyTaskAnalytics(String userId, LocalDate date) {
+        List<Map<String, Object>> taskData = taskRepository.getDailyTaskDataForUser(userId, date);
+
+        return DailyTaskAnalyticsResponse.builder()
+                .date(date)
+                .taskData(taskData)
+                .build();
+    }
+
 
     private LocalDateTime getStartDate(String period) {
         LocalDateTime now = LocalDateTime.now();

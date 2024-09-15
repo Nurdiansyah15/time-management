@@ -9,9 +9,7 @@ import java.util.Map;
 
 @Data
 @Builder
-public class AnalyticsResponse {
-    private long totalUsers;
-    private long activeUsers;
-    private double averageTasksPerUser;
+public class DailyTaskAnalyticsResponse {
+    private LocalDate date;
+    private List<Map<String, Object>> taskData;
 }
-
