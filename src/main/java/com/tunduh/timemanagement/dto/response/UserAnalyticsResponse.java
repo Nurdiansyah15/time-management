@@ -13,7 +13,8 @@ public class UserAnalyticsResponse {
     private long pendingTasks;
     private long completedMissions;
     private double totalSpent;
-    private Map<String, Long> taskCompletionData;
-    private Map<String, Long> completedMissionsData;
+    private Map<String, Long> taskCompletionByDate;
+    private Map<String, Long> taskStatusCounts;
+    private Map<String, Long> missionStatusCounts;
     private Map<String, Double> spendingByCategory;
 }

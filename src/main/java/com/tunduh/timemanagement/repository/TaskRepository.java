@@ -67,4 +67,12 @@ public interface TaskRepository extends JpaRepository<TaskEntity, String>, JpaSp
             "AND MONTH(t.createdAt) = MONTH(:currentDate) " +
             "AND (t.repetitionEndDate IS NULL OR t.repetitionEndDate >= :currentDate)")
     List<TaskEntity> findYearlyRecurringTasks(@Param("currentDate") LocalDateTime currentDate);
+
+    @Query("SELECT new map(DATE(t.createdAt) as date, t.status as status, COUNT(t) as count) " +
+            "FROM TaskEntity t " +
+            "WHERE t.user.id = :userId AND t.createdAt BETWEEN :startDate AND :endDate " +
+            "GROUP BY DATE(t.createdAt), t.status")
+    List<Map<String, Object>> getTaskDataByUserIdAndDateRange(@Param("userId") String userId,
+                                                              @Param("startDate") LocalDateTime startDate,
+                                                              @Param("endDate") LocalDateTime endDate);
 }

@@ -22,4 +22,10 @@ public interface MissionRepository extends JpaRepository<MissionEntity, String>,
             "WHERE u.id = :userId " +
             "GROUP BY m.status")
     List<Map<String, Object>> getCompletedMissionsByUserId(@Param("userId") String userId);
+
+    @Query("SELECT new map(m.status as status, COUNT(m) as count) " +
+            "FROM MissionEntity m JOIN m.users u " +
+            "WHERE u.id = :userId " +
+            "GROUP BY m.status")
+    List<Map<String, Object>> getMissionDataByUserId(@Param("userId") String userId);
 }
