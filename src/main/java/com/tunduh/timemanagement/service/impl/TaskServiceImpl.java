@@ -46,7 +46,7 @@ public class TaskServiceImpl implements TaskService {
                 .status(taskRequest.getStatus())
                 .duration(taskRequest.getDuration())
                 .priority(taskRequest.getPriority())
-                .repetitionType(taskRequest.getRepetitionType())
+                .repetitionType(TaskEntity.RepetitionType.valueOf(taskRequest.getRepetitionType()))
                 .repetitionDays(taskRequest.getRepetitionDays())
                 .repetitionEndDate(taskRequest.getRepetitionEndDate())
                 .user(user)
@@ -94,7 +94,7 @@ public class TaskServiceImpl implements TaskService {
         task.setStatus(taskRequest.getStatus());
         task.setDuration(taskRequest.getDuration());
         task.setPriority(taskRequest.getPriority());
-        task.setRepetitionType(taskRequest.getRepetitionType());
+        task.setRepetitionType(TaskEntity.RepetitionType.valueOf(taskRequest.getRepetitionType()));
         task.setRepetitionDays(taskRequest.getRepetitionDays());
         task.setRepetitionEndDate(taskRequest.getRepetitionEndDate());
         task.setUpdatedAt(LocalDateTime.now());

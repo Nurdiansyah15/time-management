@@ -34,7 +34,7 @@ public class TaskRequest {
     private String priority;
 
     @EnumValidator(enumClass = RepetitionType.class, message = "Invalid repetition type")
-    private RepetitionType repetitionType;
+    private String repetitionType;
 
     private Set<@Min(1) @Max(7) Integer> repetitionDays;
 

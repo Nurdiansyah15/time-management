@@ -40,29 +40,29 @@ public interface TaskRepository extends JpaRepository<TaskEntity, String>, JpaSp
     List<Map<String, Double>> getBudgetSpentOnTasksForUser(@Param("userId") String userId);
 
     @Query("SELECT t FROM TaskEntity t " +
-            "WHERE t.repetitionType != com.tunduh.timemanagement.entity.TaskEntity$RepetitionType.NONE " +
+            "WHERE t.repetitionType != com.tunduh.timemanagement.entity.TaskEntity.RepetitionType.NONE " +
             "AND (t.repetitionEndDate IS NULL OR t.repetitionEndDate >= :currentDate)")
     List<TaskEntity> findAllActiveRecurringTasks(@Param("currentDate") LocalDateTime currentDate);
 
     @Query("SELECT t FROM TaskEntity t " +
-            "WHERE t.repetitionType = com.tunduh.timemanagement.entity.TaskEntity$RepetitionType.DAILY " +
+            "WHERE t.repetitionType = com.tunduh.timemanagement.entity.TaskEntity.RepetitionType.DAILY " +
             "AND (t.repetitionEndDate IS NULL OR t.repetitionEndDate >= :currentDate)")
     List<TaskEntity> findDailyRecurringTasks(@Param("currentDate") LocalDateTime currentDate);
 
     @Query("SELECT t FROM TaskEntity t " +
-            "WHERE t.repetitionType = com.tunduh.timemanagement.entity.TaskEntity$RepetitionType.WEEKLY " +
+            "WHERE t.repetitionType = com.tunduh.timemanagement.entity.TaskEntity.RepetitionType.WEEKLY " +
             "AND :dayOfWeek MEMBER OF t.repetitionDays " +
             "AND (t.repetitionEndDate IS NULL OR t.repetitionEndDate >= :currentDate)")
     List<TaskEntity> findWeeklyRecurringTasks(@Param("currentDate") LocalDateTime currentDate, @Param("dayOfWeek") int dayOfWeek);
 
     @Query("SELECT t FROM TaskEntity t " +
-            "WHERE t.repetitionType = com.tunduh.timemanagement.entity.TaskEntity$RepetitionType.MONTHLY " +
+            "WHERE t.repetitionType = com.tunduh.timemanagement.entity.TaskEntity.RepetitionType.MONTHLY " +
             "AND DAY(t.createdAt) = DAY(:currentDate) " +
             "AND (t.repetitionEndDate IS NULL OR t.repetitionEndDate >= :currentDate)")
     List<TaskEntity> findMonthlyRecurringTasks(@Param("currentDate") LocalDateTime currentDate);
 
     @Query("SELECT t FROM TaskEntity t " +
-            "WHERE t.repetitionType = com.tunduh.timemanagement.entity.TaskEntity$RepetitionType.YEARLY " +
+            "WHERE t.repetitionType = com.tunduh.timemanagement.entity.TaskEntity.RepetitionType.YEARLY " +
             "AND DAY(t.createdAt) = DAY(:currentDate) " +
             "AND MONTH(t.createdAt) = MONTH(:currentDate) " +
             "AND (t.repetitionEndDate IS NULL OR t.repetitionEndDate >= :currentDate)")
