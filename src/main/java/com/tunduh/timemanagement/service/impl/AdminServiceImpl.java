@@ -60,9 +60,9 @@ public class AdminServiceImpl implements AdminService {
         Page<SubmissionEntity> submissionPage = submissionRepository.findAll(spec, pageable);
         List<SubmissionResponse> submissionResponses = submissionPage.getContent().stream()
                 .map(this::mapToSubmissionResponse)
-                .collect(Collectors.toList());
+                .toList();
 
-        return new CustomPagination<>(submissionResponses, submissionPage.getTotalElements(), page, size);
+        return new CustomPagination<>(submissionPage.map(this::mapToSubmissionResponse));
     }
 
     @Override

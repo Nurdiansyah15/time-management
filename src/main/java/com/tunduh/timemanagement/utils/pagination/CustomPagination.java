@@ -7,26 +7,29 @@ import java.util.List;
 
 @Data
 public class CustomPagination<T> {
-    List<T> content;
-    CustomPageable pageable;
+    private List<T> content;
+    private long totalElements;
+    private int pageNumber;
+    private int pageSize;
+    private int totalPages;
+
+    public CustomPagination(List<T> content, long totalElements, int pageNumber, int pageSize) {
+        this.content = content;
+        this.totalElements = totalElements;
+        this.pageNumber = pageNumber;
+        this.pageSize = pageSize;
+        this.totalPages = calculateTotalPages(totalElements, pageSize);
+    }
 
     public CustomPagination(Page<T> page) {
         this.content = page.getContent();
-        this.pageable = new CustomPageable(page.getPageable().getPageNumber(),
-                page.getPageable().getPageSize(), page.getTotalElements());
+        this.totalElements = page.getTotalElements();
+        this.pageNumber = page.getNumber();
+        this.pageSize = page.getSize();
+        this.totalPages = page.getTotalPages();
     }
 
-    @Data
-    static class CustomPageable {
-        int pageNumber;
-        int pageSize;
-        long totalElements;
-
-        public CustomPageable(int pageNumber, int pageSize, long totalElements) {
-
-            this.pageNumber = pageNumber;
-            this.pageSize = pageSize;
-            this.totalElements = totalElements;
-        }
+    private int calculateTotalPages(long totalElements, int pageSize) {
+        return pageSize > 0 ? (int) Math.ceil((double) totalElements / (double) pageSize) : 0;
     }
 }
