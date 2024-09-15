@@ -16,7 +16,7 @@ import java.util.UUID;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class TaskScheduler {
+public class TaskSchedulingService {
 
     private final TaskRepository taskRepository;
 

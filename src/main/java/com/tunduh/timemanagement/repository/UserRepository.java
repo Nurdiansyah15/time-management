@@ -12,7 +12,7 @@ public interface UserRepository extends JpaRepository<UserEntity, String>, JpaSp
     Boolean existsByEmail(String email);
     Optional<UserEntity> findByUsername(String username);
 
-    @Query("SELECT COUNT(u) FROM UserEntity u WHERE u.lastLoginDate >= CURRENT_DATE - 30")
+    @Query("SELECT COUNT(u) FROM UserEntity u WHERE u.lastLoginDate >= :thirtyDaysAgo")
     long countActiveUsers();
 
     @Query("SELECT AVG(SIZE(u.tasks)) FROM UserEntity u")

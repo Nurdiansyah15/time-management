@@ -73,7 +73,7 @@ public class UserTransactionServiceImpl implements UserTransactionService {
 
     @Override
     public UserTransactionResponse getTransactionById(String id, String userId) {
-        UserTransactionEntity transaction = userTransactionRepository.findByIdAndUserId(id, userId)
+        UserTransactionEntity transaction = (UserTransactionEntity) userTransactionRepository.findByIdAndUserId(id, userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Transaction not found"));
         return mapToUserTransactionResponse(transaction);
     }

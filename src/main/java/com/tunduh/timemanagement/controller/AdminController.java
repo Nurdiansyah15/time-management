@@ -76,9 +76,14 @@ public class AdminController {
     }
 
     @GetMapping("/shop")
-    @Operation(summary = "Get all shop items")
-    public ResponseEntity<?> getAllShopItems() {
-        List<ShopItemResponse> shopItems = adminService.getAllShopItems();
+    @Operation(summary = "Get all shop items with pagination and filtering")
+    public ResponseEntity<?> getAllShopItems(
+            @Parameter(description = "Page number (0-based)") @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Page size") @RequestParam(defaultValue = "10") int size,
+            @Parameter(description = "Sort parameter (e.g., 'name,asc' or 'price,desc')") @RequestParam(required = false) String sort,
+            @Parameter(description = "Filter by name") @RequestParam(required = false) String name,
+            @Parameter(description = "Filter by max price") @RequestParam(required = false) Integer maxPrice) {
+        CustomPagination<ShopItemResponse> shopItems = adminService.getAllShopItems(page, size, sort, name, maxPrice);
         return Response.renderJSON(shopItems);
     }
 }

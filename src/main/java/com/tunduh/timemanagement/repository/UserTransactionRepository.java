@@ -9,6 +9,7 @@ import org.springframework.stereotype.Repository;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Repository
 public interface UserTransactionRepository extends JpaRepository<UserTransactionEntity, String> {
@@ -38,4 +39,6 @@ public interface UserTransactionRepository extends JpaRepository<UserTransaction
     List<Map<String, Double>> getSpendingByCategoryForUserAndDateRange(@Param("userId") String userId,
                                                                        @Param("startDate") LocalDateTime startDate,
                                                                        @Param("endDate") LocalDateTime endDate);
+
+    Optional<Object> findByIdAndUserId(String id, String userId);
 }
