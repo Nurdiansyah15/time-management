@@ -6,28 +6,26 @@ import com.tunduh.timemanagement.entity.UserEntity;
 import com.tunduh.timemanagement.service.TaskService;
 import com.tunduh.timemanagement.utils.pagination.CustomPagination;
 import com.tunduh.timemanagement.utils.response.Response;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/tasks")
 @RequiredArgsConstructor
 @Slf4j
+@Tag(name = "Tasks", description = "Task management operations")
 public class TaskController {
     private final TaskService taskService;
 
     @PostMapping
+    @Operation(summary = "Create a new task")
     public ResponseEntity<?> createTask(@Valid @RequestBody TaskRequest taskRequest, Authentication authentication) {
         UserEntity principal = (UserEntity) authentication.getPrincipal();
         String userId = principal.getId();
@@ -36,58 +34,31 @@ public class TaskController {
     }
 
     @GetMapping
+    @Operation(summary = "Get all tasks with pagination and filtering")
     public ResponseEntity<?> getAllTasks(
             Authentication authentication,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(required = false) String sort,
-            @RequestParam(required = false) String title,
-            @RequestParam(required = false) String status) {
-
-        log.debug("getAllTasks called with page: {}, size: {}, sort: {}, title: {}, status: {}",
-                page, size, sort, title, status);
-
+            @Parameter(description = "Page number (0-based)") @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Page size") @RequestParam(defaultValue = "10") int size,
+            @Parameter(description = "Sort parameter (e.g., 'title,asc' or 'createdAt,desc')") @RequestParam(required = false) String sort,
+            @Parameter(description = "Filter by title") @RequestParam(required = false) String title,
+            @Parameter(description = "Filter by status") @RequestParam(required = false) String status) {
         UserEntity principal = (UserEntity) authentication.getPrincipal();
         String userId = principal.getId();
-        log.debug("User ID from authentication: {}", userId);
-
-        Sort sortObj = parseSort(sort);
-        Pageable pageable = PageRequest.of(page, size, sortObj);
-
-        log.debug("Calling taskService.getAllTasks");
-        CustomPagination<TaskResponse> paginatedTasks = taskService.getAllTasks(userId, pageable, title, status);
-
-        log.debug("Returning response with {} items", paginatedTasks.getContent().size());
-        return Response.renderJSON(paginatedTasks,"Successfully retrieved all tasks");
-    }
-
-    private Sort parseSort(String sort) {
-        if (sort == null || sort.isEmpty()) {
-            log.debug("No sort parameter provided, using unsorted");
-            return Sort.unsorted();
-        }
-
-        log.debug("Parsing sort parameter: {}", sort);
-        String[] sortParams = sort.split(",");
-        List<Sort.Order> orders = new ArrayList<>();
-        for (String param : sortParams) {
-            String[] parts = param.trim().split(":");
-            String property = parts[0];
-            Sort.Direction direction = (parts.length > 1 && parts[1].equalsIgnoreCase("desc"))
-                    ? Sort.Direction.DESC : Sort.Direction.ASC;
-            orders.add(new Sort.Order(direction, property));
-            log.debug("Added sort order: {} {}", property, direction);
-        }
-        return Sort.by(orders);
+        CustomPagination<TaskResponse> paginatedTasks = taskService.getAllTasks(userId, page, size, sort, title, status);
+        return Response.renderJSON(paginatedTasks, "Successfully retrieved all tasks");
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> getTaskById(@PathVariable String id) {
-        TaskResponse task = taskService.getTaskById(id);
+    @Operation(summary = "Get a task by ID")
+    public ResponseEntity<?> getTaskById(@PathVariable String id, Authentication authentication) {
+        UserEntity principal = (UserEntity) authentication.getPrincipal();
+        String userId = principal.getId();
+        TaskResponse task = taskService.getTaskById(id, userId);
         return Response.renderJSON(task);
     }
 
     @PutMapping("/{id}")
+    @Operation(summary = "Update a task")
     public ResponseEntity<?> updateTask(@PathVariable String id, @Valid @RequestBody TaskRequest taskRequest, Authentication authentication) {
         UserEntity principal = (UserEntity) authentication.getPrincipal();
         String userId = principal.getId();
@@ -96,6 +67,7 @@ public class TaskController {
     }
 
     @DeleteMapping("/{id}")
+    @Operation(summary = "Delete a task")
     public ResponseEntity<?> deleteTask(@PathVariable String id, Authentication authentication) {
         UserEntity principal = (UserEntity) authentication.getPrincipal();
         String userId = principal.getId();

@@ -14,11 +14,15 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -29,9 +33,11 @@ public class TaskServiceImpl implements TaskService {
     private final UserRepository userRepository;
 
     @Override
+    @Transactional
     public TaskResponse createTask(TaskRequest taskRequest, String userId) {
         UserEntity user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
         TaskEntity task = TaskEntity.builder()
                 .id(UUID.randomUUID().toString())
                 .title(taskRequest.getTitle())
@@ -45,32 +51,30 @@ public class TaskServiceImpl implements TaskService {
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
                 .build();
+
         TaskEntity savedTask = taskRepository.save(task);
         return mapToTaskResponse(savedTask);
     }
 
     @Override
-    public CustomPagination<TaskResponse> getAllTasks(String userId, Pageable pageable, String title, String status) {
-        log.debug("getAllTasks called with userId: {}, pageable: {}, title: {}, status: {}", userId, pageable, title, status);
-
+    public CustomPagination<TaskResponse> getAllTasks(String userId, int page, int size, String sort, String title, String status) {
+        Pageable pageable = createPageable(page, size, sort);
         Specification<TaskEntity> spec = TaskSpecification.getSpecification(title, status, userId);
 
-        log.debug("Executing findAll with specification and pageable");
         Page<TaskEntity> taskPage = taskRepository.findAll(spec, pageable);
+        List<TaskResponse> taskResponses = taskPage.getContent().stream()
+                .map(this::mapToTaskResponse)
+                .toList();
 
-        log.debug("Mapping TaskEntity to TaskResponse");
-        Page<TaskResponse> taskResponsePage = taskPage.map(this::mapToTaskResponse);
-
-        log.debug("Creating CustomPagination object");
-        CustomPagination<TaskResponse> result = new CustomPagination<>(taskResponsePage);
-
-        log.debug("Returning result with {} items", result.getContent().size());
-        return result;
+        return new CustomPagination<>(taskPage.map(this::mapToTaskResponse));
     }
+
     @Override
-    public TaskResponse getTaskById(String id) {
-        TaskEntity task = taskRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Task not found"));
+    public TaskResponse getTaskById(String id, String userId) {
+        TaskEntity task = taskRepository.findByIdAndUserId(id, userId);
+        if (task == null) {
+            throw new ResourceNotFoundException("Task not found for this user");
+        }
         return mapToTaskResponse(task);
     }
 
@@ -81,6 +85,7 @@ public class TaskServiceImpl implements TaskService {
         if (task == null) {
             throw new ResourceNotFoundException("Task not found for this user");
         }
+
         task.setTitle(taskRequest.getTitle());
         task.setEnergy(taskRequest.getEnergy());
         task.setRepetitionConfig(taskRequest.getRepetitionConfig());
@@ -89,6 +94,7 @@ public class TaskServiceImpl implements TaskService {
         task.setDuration(taskRequest.getDuration());
         task.setPriority(taskRequest.getPriority());
         task.setUpdatedAt(LocalDateTime.now());
+
         TaskEntity updatedTask = taskRepository.save(task);
         return mapToTaskResponse(updatedTask);
     }
@@ -116,5 +122,20 @@ public class TaskServiceImpl implements TaskService {
                 .createdAt(task.getCreatedAt())
                 .updatedAt(task.getUpdatedAt())
                 .build();
+    }
+
+    private Pageable createPageable(int page, int size, String sort) {
+        List<Sort.Order> orders = new ArrayList<>();
+        if (sort != null) {
+            String[] sortParams = sort.split(",");
+            for (String param : sortParams) {
+                String[] keyDirection = param.split(":");
+                String key = keyDirection[0];
+                Sort.Direction direction = keyDirection.length > 1 && keyDirection[1].equalsIgnoreCase("desc") ?
+                        Sort.Direction.DESC : Sort.Direction.ASC;
+                orders.add(new Sort.Order(direction, key));
+            }
+        }
+        return PageRequest.of(page, size, Sort.by(orders));
     }
 }
