@@ -23,7 +23,6 @@ import java.util.Set;
 @NoArgsConstructor
 @Table(name = "users")
 public class UserEntity implements UserDetails {
-
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
@@ -45,6 +44,9 @@ public class UserEntity implements UserDetails {
 
     @Column(name = "user_point")
     private Integer userPoint;
+
+    @Column(name = "last_login_date")
+    private LocalDateTime lastLoginDate;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)

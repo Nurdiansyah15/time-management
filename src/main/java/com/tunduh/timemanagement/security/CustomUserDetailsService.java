@@ -14,7 +14,7 @@ public class CustomUserDetailsService implements UserDetailsService {
     @Autowired
     private UserRepository userRepository;
 
-    public UserDetails loadUserById(String id) {
+    public UserEntity loadUserById(String id) {
         UserEntity user = userRepository.findById(id)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with id: " + id));
         return user;

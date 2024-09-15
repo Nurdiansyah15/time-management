@@ -1,5 +1,9 @@
-package com.tunduh.timemanagement.security;
+package com.tunduh.timemanagement.config;
 
+import com.tunduh.timemanagement.entity.UserEntity;
+import com.tunduh.timemanagement.security.CustomUserDetailsService;
+import com.tunduh.timemanagement.security.JwtTokenProvider;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -7,6 +11,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
+import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -16,42 +21,42 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
+@Slf4j
+@Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
+    private final JwtTokenProvider tokenProvider;
+    private final CustomUserDetailsService customUserDetailsService;
 
-    private static final Logger logger = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
-
-    @Autowired
-    private JwtTokenProvider tokenProvider;
-
-    @Autowired
-    private CustomUserDetailsService customUserDetailsService;
+    public JwtAuthenticationFilter(JwtTokenProvider tokenProvider, CustomUserDetailsService customUserDetailsService) {
+        this.tokenProvider = tokenProvider;
+        this.customUserDetailsService = customUserDetailsService;
+    }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
         try {
             String jwt = getJwtFromRequest(request);
-            logger.debug("Extracted JWT: {}", jwt);
+            log.debug("Extracted JWT: {}", jwt);
 
             if (StringUtils.hasText(jwt)) {
                 if (tokenProvider.validateToken(jwt)) {
                     String userId = tokenProvider.getUserIdFromToken(jwt);
-                    logger.debug("Validated token for user ID: {}", userId);
+                    log.debug("Validated token for user ID: {}", userId);
 
-                    UserDetails userDetails = customUserDetailsService.loadUserById(userId);
+                    UserEntity userDetails = customUserDetailsService.loadUserById(userId);
                     UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                     authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-
                     SecurityContextHolder.getContext().setAuthentication(authentication);
-                    logger.debug("Set authentication in SecurityContext for user ID: {}", userId);
+                    log.debug("Set authentication in SecurityContext for user ID: {}", userId);
                 } else {
-                    logger.warn("JWT token is invalid");
+                    log.warn("JWT token is invalid");
                 }
             } else {
-                logger.warn("JWT token is not present in the request");
+                log.warn("JWT token is not present in the request");
             }
         } catch (Exception ex) {
-            logger.error("Could not set user authentication in security context", ex);
+            log.error("Could not set user authentication in security context", ex);
         }
 
         filterChain.doFilter(request, response);
