@@ -6,19 +6,27 @@ import io.swagger.v3.oas.models.security.OAuthFlow;
 import io.swagger.v3.oas.models.security.OAuthFlows;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
+import io.swagger.v3.oas.models.servers.Server;
 import org.springdoc.core.customizers.OpenApiCustomizer;
 import org.springdoc.core.models.GroupedOpenApi;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.oauth2.jwt.Jwt;
+
+import java.util.List;
 
 @Configuration
 public class OpenApiConfig {
+    Server devServer = new Server()
+            .description("Development Server")
+            .url("http://localhost:8080");
+    Server publicServer = new Server()
+            .url("http://10.10.103.170:8080")
+            .description("Production Server");
+
 
     @Value("${spring.security.oauth2.client.provider.google.authorization-uri}")
     private String authorizationUrl;
-
     @Value("${spring.security.oauth2.client.provider.google.token-uri}")
     private String tokenUrl;
 
@@ -40,20 +48,16 @@ public class OpenApiConfig {
                                         )
                                 )
                         )
-                                .addSecuritySchemes("bearerAuth", new SecurityScheme()
-                                        .type(SecurityScheme.Type.HTTP)
-                                        .scheme("bearer")
-                                        .bearerFormat("JWT"))
+                        .addSecuritySchemes("bearerAuth", new SecurityScheme()
+                                .type(SecurityScheme.Type.HTTP)
+                                .scheme("bearer")
+                                .bearerFormat("JWT"))
                 )
                 .addSecurityItem(new SecurityRequirement().addList("bearerAuth"))
-                .addSecurityItem(new SecurityRequirement().addList("google_oauth2"));
+                .addSecurityItem(new SecurityRequirement().addList("google_oauth2"))
+                .servers(List.of(
+                        devServer,
+                        publicServer
+                        ));
     }
-
-//    @Bean
-//    public GroupedOpenApi publicApi() {
-//        return GroupedOpenApi.builder()
-//                .group("public")
-//                .pathsToMatch("/api/**")
-//                .build();
-//    }
 }
