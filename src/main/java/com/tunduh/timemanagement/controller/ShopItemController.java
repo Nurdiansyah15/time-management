@@ -28,7 +28,7 @@ public class ShopItemController {
     private final ShopItemService shopItemService;
 
     @PostMapping
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Create a new shop item")
     public ResponseEntity<?> createShopItem(@Valid @RequestBody ShopItemRequest shopItemRequest) {
         ShopItemResponse createdShopItem = shopItemService.createShopItem(shopItemRequest);
