@@ -43,6 +43,8 @@ public class ShopItemServiceImpl implements ShopItemService {
                 .name(shopItemRequest.getName())
                 .itemPicture(shopItemRequest.getItemPicture())
                 .price(shopItemRequest.getPrice())
+                .stock(shopItemRequest.getStock())
+                .type(shopItemRequest.getType())
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
                 .build();
@@ -105,6 +107,7 @@ public class ShopItemServiceImpl implements ShopItemService {
             throw new InsufficientPointsException("User does not have enough points to make this purchase");
         }
 
+        shopItem.setStock(shopItem.getStock() - quantity);
         user.setUserPoint(user.getUserPoint() - totalPrice);
         userRepository.save(user);
 
