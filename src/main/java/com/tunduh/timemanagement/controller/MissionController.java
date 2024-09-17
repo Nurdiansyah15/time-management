@@ -1,5 +1,6 @@
 package com.tunduh.timemanagement.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.tunduh.timemanagement.dto.request.MissionRequest;
 import com.tunduh.timemanagement.dto.response.MissionResponse;
 import com.tunduh.timemanagement.entity.UserEntity;
@@ -14,6 +15,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/missions")
@@ -31,6 +35,15 @@ public class MissionController {
         MissionResponse createdMission = missionService.createMission(missionRequest, userId);
         return Response.renderJSON(createdMission, "Mission created successfully!");
     }
+
+    @PutMapping("/{id}/photos")
+    @Operation(summary = "Update photo")
+    public ResponseEntity<?> updatePhoto(
+            @RequestPart("images") MultipartFile file,
+            @PathVariable String id) throws JsonProcessingException {
+        return Response.renderJSON(missionService.updatePhoto(file, id), "PHOTOS UPLOADED");
+    }
+
 
     @GetMapping
     @Operation(summary = "Get all missions with pagination and filtering")

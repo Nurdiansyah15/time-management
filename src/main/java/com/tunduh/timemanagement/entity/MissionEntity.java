@@ -35,6 +35,9 @@ public class MissionEntity {
     @Column(nullable = false)
     private Integer point;
 
+    @Column(name = "mission_picture")
+    private String missionPicture;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
