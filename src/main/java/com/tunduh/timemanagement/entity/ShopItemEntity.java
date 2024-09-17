@@ -32,6 +32,12 @@ public class ShopItemEntity {
     @Column(nullable = false)
     private Integer price;
 
+    @Column(nullable = false)
+    private Integer stock;
+
+    @Column(nullable = false)
+    private String type;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;

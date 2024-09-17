@@ -7,6 +7,7 @@ import com.tunduh.timemanagement.entity.UserEntity;
 import com.tunduh.timemanagement.exception.ResourceNotFoundException;
 import com.tunduh.timemanagement.repository.MissionRepository;
 import com.tunduh.timemanagement.repository.UserRepository;
+import com.tunduh.timemanagement.service.CloudinaryService;
 import com.tunduh.timemanagement.service.MissionService;
 import com.tunduh.timemanagement.utils.pagination.CustomPagination;
 import com.tunduh.timemanagement.utils.specification.MissionSpecification;
@@ -18,6 +19,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -30,6 +32,7 @@ import java.util.UUID;
 public class MissionServiceImpl implements MissionService {
     private final MissionRepository missionRepository;
     private final UserRepository userRepository;
+    private final CloudinaryService cloudinaryService;
 
     @Override
     @Transactional
@@ -50,6 +53,20 @@ public class MissionServiceImpl implements MissionService {
 
         MissionEntity savedMission = missionRepository.save(mission);
         return mapToMissionResponse(savedMission);
+    }
+
+    @Override
+    @Transactional
+    public MissionResponse updatePhoto(MultipartFile file, String id) {
+        MissionEntity mission =  missionRepository.findById(id).orElse(null);
+        String url = cloudinaryService.uploadFile(file, "mission");
+        if (mission != null){
+            mission.setMissionPicture(url);
+            MissionEntity savedMission = missionRepository.save(mission);
+            return mapToMissionResponse(savedMission);
+        } else {
+            return null;
+        }
     }
 
     @Override
@@ -120,6 +137,7 @@ public class MissionServiceImpl implements MissionService {
                 .progress(mission.getProgress())
                 .status(mission.getStatus())
                 .point(mission.getPoint())
+                .missionPicture(mission.getMissionPicture())
                 .createdAt(mission.getCreatedAt())
                 .updatedAt(mission.getUpdatedAt())
                 .build();

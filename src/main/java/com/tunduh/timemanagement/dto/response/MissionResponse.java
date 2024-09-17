@@ -18,6 +18,7 @@ public class MissionResponse {
     private String progress;
     private String status;
     private Integer point;
+    private String missionPicture;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

@@ -1,8 +1,10 @@
 package com.tunduh.timemanagement.service.impl;
 
 import com.tunduh.timemanagement.dto.request.ShopItemRequest;
+import com.tunduh.timemanagement.dto.response.MissionResponse;
 import com.tunduh.timemanagement.dto.response.ShopItemResponse;
 import com.tunduh.timemanagement.dto.response.PurchaseResponse;
+import com.tunduh.timemanagement.entity.MissionEntity;
 import com.tunduh.timemanagement.entity.ShopItemEntity;
 import com.tunduh.timemanagement.entity.UserEntity;
 import com.tunduh.timemanagement.entity.UserTransactionEntity;
@@ -11,29 +13,35 @@ import com.tunduh.timemanagement.exception.ResourceNotFoundException;
 import com.tunduh.timemanagement.repository.ShopItemRepository;
 import com.tunduh.timemanagement.repository.UserRepository;
 import com.tunduh.timemanagement.repository.UserTransactionRepository;
+import com.tunduh.timemanagement.service.CloudinaryService;
 import com.tunduh.timemanagement.service.ShopItemService;
 import com.tunduh.timemanagement.utils.pagination.CustomPagination;
 import com.tunduh.timemanagement.utils.specification.ShopItemSpecification;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ShopItemServiceImpl implements ShopItemService {
     private final ShopItemRepository shopItemRepository;
     private final UserRepository userRepository;
     private final UserTransactionRepository userTransactionRepository;
+    private final CloudinaryService cloudinaryService;
 
     @Override
     @Transactional
@@ -41,13 +49,27 @@ public class ShopItemServiceImpl implements ShopItemService {
         ShopItemEntity shopItem = ShopItemEntity.builder()
                 .id(UUID.randomUUID().toString())
                 .name(shopItemRequest.getName())
-                .itemPicture(shopItemRequest.getItemPicture())
                 .price(shopItemRequest.getPrice())
+                .stock(shopItemRequest.getStock())
+                .type(shopItemRequest.getType())
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
                 .build();
 
         ShopItemEntity savedShopItem = shopItemRepository.save(shopItem);
+        return mapToShopItemResponse(savedShopItem);
+    }
+
+    @Override
+    @Transactional
+    public ShopItemResponse updatePhoto(MultipartFile file, String id) {
+        ShopItemEntity shopItem = shopItemRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Shop item with id " + id + " not found"));
+        String url = cloudinaryService.uploadFile(file, "mission");
+        shopItem.setItemPicture(url);
+        System.out.println(shopItem);
+        ShopItemEntity savedShopItem = shopItemRepository.save(shopItem);
+        System.out.println(savedShopItem);
         return mapToShopItemResponse(savedShopItem);
     }
 
@@ -74,7 +96,6 @@ public class ShopItemServiceImpl implements ShopItemService {
                 .orElseThrow(() -> new ResourceNotFoundException("Shop item not found"));
 
         shopItem.setName(shopItemRequest.getName());
-        shopItem.setItemPicture(shopItemRequest.getItemPicture());
         shopItem.setPrice(shopItemRequest.getPrice());
         shopItem.setUpdatedAt(LocalDateTime.now());
 
@@ -105,6 +126,7 @@ public class ShopItemServiceImpl implements ShopItemService {
             throw new InsufficientPointsException("User does not have enough points to make this purchase");
         }
 
+        shopItem.setStock(shopItem.getStock() - quantity);
         user.setUserPoint(user.getUserPoint() - totalPrice);
         userRepository.save(user);
 
