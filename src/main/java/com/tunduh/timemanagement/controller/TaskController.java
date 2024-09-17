@@ -1,5 +1,6 @@
 package com.tunduh.timemanagement.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.tunduh.timemanagement.dto.request.TaskRequest;
 import com.tunduh.timemanagement.dto.response.TaskResponse;
 import com.tunduh.timemanagement.entity.UserEntity;
@@ -15,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/tasks")
@@ -31,6 +33,14 @@ public class TaskController {
         String userId = principal.getId();
         TaskResponse createdTask = taskService.createTask(taskRequest, userId);
         return Response.renderJSON(createdTask, "Task created successfully!");
+    }
+
+    @PutMapping("/{id}/photos")
+    @Operation(summary = "Update photo")
+    public ResponseEntity<?> updatePhoto(
+            @RequestPart("images") MultipartFile file,
+            @PathVariable String id) throws JsonProcessingException {
+        return Response.renderJSON(taskService.updatePhoto(file, id), "PHOTOS UPLOADED");
     }
 
     @GetMapping

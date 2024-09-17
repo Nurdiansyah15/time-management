@@ -1,5 +1,6 @@
 package com.tunduh.timemanagement.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.tunduh.timemanagement.dto.request.SubmissionRequest;
 import com.tunduh.timemanagement.dto.response.AnalyticsResponse;
 import com.tunduh.timemanagement.dto.response.ShopItemResponse;
@@ -15,13 +16,14 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/admin")
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('ADMIN')")
+//@PreAuthorize("hasRole('ADMIN')")
 @Tag(name = "Admin", description = "Admin dashboard operations")
 public class AdminController {
 
@@ -32,6 +34,14 @@ public class AdminController {
     public ResponseEntity<?> createSubmission(@Valid @RequestBody SubmissionRequest submissionRequest) {
         SubmissionResponse createdSubmission = adminService.createSubmission(submissionRequest);
         return Response.renderJSON(createdSubmission, "Submission created successfully!");
+    }
+
+    @PutMapping("/submissions/{id}/photos")
+    @Operation(summary = "Update photo")
+    public ResponseEntity<?> updatePhoto(
+            @RequestPart("images") MultipartFile file,
+            @PathVariable String id) throws JsonProcessingException {
+        return Response.renderJSON(adminService.updatePhoto(file, id), "PHOTOS UPLOADED");
     }
 
     @GetMapping("/submissions")

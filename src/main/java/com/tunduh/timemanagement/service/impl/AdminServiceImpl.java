@@ -4,16 +4,20 @@ import com.tunduh.timemanagement.dto.request.SubmissionRequest;
 import com.tunduh.timemanagement.dto.response.AnalyticsResponse;
 import com.tunduh.timemanagement.dto.response.ShopItemResponse;
 import com.tunduh.timemanagement.dto.response.SubmissionResponse;
+import com.tunduh.timemanagement.dto.response.UserResponse;
 import com.tunduh.timemanagement.entity.SubmissionEntity;
 import com.tunduh.timemanagement.entity.ShopItemEntity;
+import com.tunduh.timemanagement.entity.UserEntity;
 import com.tunduh.timemanagement.exception.ResourceNotFoundException;
 import com.tunduh.timemanagement.repository.ShopItemRepository;
 import com.tunduh.timemanagement.repository.SubmissionRepository;
 import com.tunduh.timemanagement.repository.UserRepository;
 import com.tunduh.timemanagement.service.AdminService;
+import com.tunduh.timemanagement.service.CloudinaryService;
 import com.tunduh.timemanagement.utils.pagination.CustomPagination;
 import com.tunduh.timemanagement.utils.specification.ShopItemSpecification;
 import com.tunduh.timemanagement.utils.specification.SubmissionSpecification;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -22,6 +26,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -35,6 +40,8 @@ public class AdminServiceImpl implements AdminService {
     private final SubmissionRepository submissionRepository;
     private final UserRepository userRepository;
     private final ShopItemRepository shopItemRepository;
+    private final CloudinaryService cloudinaryService;
+
 
     @Override
     @Transactional
@@ -49,6 +56,17 @@ public class AdminServiceImpl implements AdminService {
                 .build();
 
         SubmissionEntity savedSubmission = submissionRepository.save(submission);
+        return mapToSubmissionResponse(savedSubmission);
+    }
+
+    @Override
+    @Transactional
+    public SubmissionResponse updatePhoto(MultipartFile file, String id) {
+        SubmissionEntity submissionItem = submissionRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Submission item with id " + id + " not found"));
+        String url = cloudinaryService.uploadFile(file, "submission");
+        submissionItem.setSubmissionPicture(url);
+        SubmissionEntity savedSubmission = submissionRepository.save(submissionItem);
         return mapToSubmissionResponse(savedSubmission);
     }
 
@@ -119,6 +137,7 @@ public class AdminServiceImpl implements AdminService {
                 .title(submission.getTitle())
                 .description(submission.getDescription())
                 .status(submission.getStatus())
+                .submissionPicture(submission.getSubmissionPicture())
                 .createdAt(submission.getCreatedAt())
                 .updatedAt(submission.getUpdatedAt())
                 .build();
