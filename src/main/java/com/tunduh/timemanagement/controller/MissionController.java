@@ -44,7 +44,6 @@ public class MissionController {
         return Response.renderJSON(missionService.updatePhoto(file, id), "PHOTOS UPLOADED");
     }
 
-
     @GetMapping
     @Operation(summary = "Get all missions with pagination and filtering")
     public ResponseEntity<?> getAllMissions(
