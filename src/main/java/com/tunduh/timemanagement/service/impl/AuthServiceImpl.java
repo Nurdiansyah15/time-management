@@ -43,7 +43,7 @@ public class AuthServiceImpl implements AuthService {
         user.setUsername(registerRequest.getUsername());
         user.setEmail(registerRequest.getEmail());
         user.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
-        user.setRole(Role.ROLE_USER);
+        user.setRole(Role.ROLE_ADMIN);
 
         return userRepository.save(user);
     }
@@ -55,7 +55,7 @@ public class AuthServiceImpl implements AuthService {
                     UserEntity newUser = new UserEntity();
                     newUser.setEmail(email);
                     newUser.setUsername(name);
-                    newUser.setRole(Role.ROLE_USER);
+                    newUser.setRole(Role.ROLE_ADMIN);
                     return userRepository.save(newUser);
                 });
     }

@@ -1,5 +1,6 @@
 package com.tunduh.timemanagement.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.tunduh.timemanagement.dto.request.ShopItemRequest;
 import com.tunduh.timemanagement.dto.request.PurchaseRequest;
 import com.tunduh.timemanagement.dto.response.ShopItemResponse;
@@ -17,6 +18,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/shop-items")
@@ -26,11 +28,19 @@ public class ShopItemController {
     private final ShopItemService shopItemService;
 
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @Operation(summary = "Create a new shop item")
     public ResponseEntity<?> createShopItem(@Valid @RequestBody ShopItemRequest shopItemRequest) {
         ShopItemResponse createdShopItem = shopItemService.createShopItem(shopItemRequest);
         return Response.renderJSON(createdShopItem, "Shop item created successfully!");
+    }
+
+    @PutMapping("/{id}/photos")
+    @Operation(summary = "Update photo")
+    public ResponseEntity<?> updatePhoto(
+            @RequestPart("images") MultipartFile file,
+            @PathVariable String id) throws JsonProcessingException {
+        return Response.renderJSON(shopItemService.updatePhoto(file, id), "PHOTOS UPLOADED");
     }
 
     @GetMapping
