@@ -53,6 +53,9 @@ public class TaskEntity {
     @JoinColumn(name = "user_id")
     private UserEntity user;
 
+    @Column(name = "task_picture")
+    private String taskPicture;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;

@@ -12,6 +12,7 @@ public class SubmissionResponse {
     private String title;
     private String description;
     private String status;
+    private String submissionPicture;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

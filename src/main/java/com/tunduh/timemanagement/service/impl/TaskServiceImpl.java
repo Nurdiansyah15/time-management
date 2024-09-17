@@ -1,15 +1,19 @@
 package com.tunduh.timemanagement.service.impl;
 
 import com.tunduh.timemanagement.dto.request.TaskRequest;
+import com.tunduh.timemanagement.dto.response.ShopItemResponse;
 import com.tunduh.timemanagement.dto.response.TaskResponse;
+import com.tunduh.timemanagement.entity.ShopItemEntity;
 import com.tunduh.timemanagement.entity.TaskEntity;
 import com.tunduh.timemanagement.entity.UserEntity;
 import com.tunduh.timemanagement.exception.ResourceNotFoundException;
 import com.tunduh.timemanagement.repository.TaskRepository;
 import com.tunduh.timemanagement.repository.UserRepository;
+import com.tunduh.timemanagement.service.CloudinaryService;
 import com.tunduh.timemanagement.service.TaskService;
 import com.tunduh.timemanagement.utils.pagination.CustomPagination;
 import com.tunduh.timemanagement.utils.specification.TaskSpecification;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,6 +23,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -31,6 +36,8 @@ import java.util.UUID;
 public class TaskServiceImpl implements TaskService {
     private final TaskRepository taskRepository;
     private final UserRepository userRepository;
+    private final CloudinaryService cloudinaryService;
+
 
     @Override
     @Transactional
@@ -56,6 +63,17 @@ public class TaskServiceImpl implements TaskService {
 
         TaskEntity savedTask = taskRepository.save(task);
         return mapToTaskResponse(savedTask);
+    }
+
+    @Override
+    @Transactional
+    public TaskResponse updatePhoto(MultipartFile file, String id) {
+        TaskEntity taskItem = taskRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Task item with id " + id + " not found"));
+        String url = cloudinaryService.uploadFile(file, "task");
+        taskItem.setTaskPicture(url);
+        TaskEntity savedTaskItem = taskRepository.save(taskItem);
+        return mapToTaskResponse(savedTaskItem);
     }
 
     @Override
@@ -125,6 +143,7 @@ public class TaskServiceImpl implements TaskService {
                 .repetitionType(task.getRepetitionType())
                 .repetitionDays(task.getRepetitionDays())
                 .repetitionEndDate(task.getRepetitionEndDate())
+                .taskPicture(task.getTaskPicture())
                 .createdAt(task.getCreatedAt())
                 .updatedAt(task.getUpdatedAt())
                 .build();

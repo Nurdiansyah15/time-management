@@ -27,6 +27,9 @@ public class SubmissionEntity {
     @Column(nullable = false)
     private String status;
 
+    @Column(name = "submission_picture")
+    private String submissionPicture;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;

@@ -25,6 +25,7 @@ public class TaskResponse {
     private RepetitionType repetitionType;
     private Set<Integer> repetitionDays;
     private LocalDateTime repetitionEndDate;
+    private String taskPicture;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }
