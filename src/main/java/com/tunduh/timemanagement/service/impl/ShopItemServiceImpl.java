@@ -65,11 +65,9 @@ public class ShopItemServiceImpl implements ShopItemService {
     public ShopItemResponse updatePhoto(MultipartFile file, String id) {
         ShopItemEntity shopItem = shopItemRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Shop item with id " + id + " not found"));
-        String url = cloudinaryService.uploadFile(file, "mission");
+        String url = cloudinaryService.uploadFile(file, "shop-item");
         shopItem.setItemPicture(url);
-        System.out.println(shopItem);
         ShopItemEntity savedShopItem = shopItemRepository.save(shopItem);
-        System.out.println(savedShopItem);
         return mapToShopItemResponse(savedShopItem);
     }
 
