@@ -21,8 +21,19 @@ public class JwtTokenProvider {
     @Value("${app.jwt.expirationInMs}")
     private int jwtExpirationInMs;
 
+    @Value("${app.jwt.secretRefresh}")
+    private String jwtSecretRefresh;
+
+    @Value("${app.jwt.refreshExpirationInMs}")
+    private int jwtRefreshExpirationInMs;
+
     private SecretKey getSigningKey() {
         byte[] keyBytes = jwtSecret.getBytes(StandardCharsets.UTF_8);
+        return Keys.hmacShaKeyFor(keyBytes);
+    }
+
+    private SecretKey getSigningKeyRefreshToken() {
+        byte[] keyBytes = jwtSecretRefresh.getBytes(StandardCharsets.UTF_8);
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
@@ -35,6 +46,18 @@ public class JwtTokenProvider {
                 .setIssuedAt(now)
                 .setExpiration(expiryDate)
                 .signWith(getSigningKey())
+                .compact();
+    }
+
+    public String createRefreshToken(String userId) {
+        Date now = new Date();
+        Date expiryDate = new Date(now.getTime() + jwtRefreshExpirationInMs);
+
+        return Jwts.builder()
+                .setSubject(userId)
+                .setIssuedAt(now)
+                .setExpiration(expiryDate)
+                .signWith(getSigningKeyRefreshToken())
                 .compact();
     }
 
@@ -52,6 +75,7 @@ public class JwtTokenProvider {
 
         return claims.getSubject();
     }
+
 
     public boolean validateToken(String authToken) {
         try {
