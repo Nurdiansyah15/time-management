@@ -1,7 +1,13 @@
 package com.tunduh.timemanagement.controller;
 
+import com.tunduh.timemanagement.dto.request.LoginRequest;
+import com.tunduh.timemanagement.dto.request.RegisterRequest;
 import com.tunduh.timemanagement.security.JwtTokenProvider;
+import com.tunduh.timemanagement.service.AuthService;
 import com.tunduh.timemanagement.utils.response.Response;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,7 +19,12 @@ import java.util.Collections;
 import java.util.Map;
 
 @RestController
+@RequestMapping("/api/auth")
+@RequiredArgsConstructor
+@Slf4j
 public class AuthController {
+    private final AuthService authService;
+
 
     @Autowired
     private JwtTokenProvider jwtTokenProvider;
@@ -23,28 +34,28 @@ public class AuthController {
         return Collections.singletonMap("name", principal.getAttribute("name"));
     }
 
-    @GetMapping("/")
-    public String home() {
-        return "Home Page";
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@Valid @RequestBody LoginRequest req) {
+        log.info("Login request: {}", req.getEmail());
+        return Response.renderJSON(
+                authService.login(req)
+        );
     }
 
-    @GetMapping("/login")
-    public String login() {
-        return "Login Page";
+    @PostMapping("/register")
+    public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest req) {
+        return Response.renderJSON(
+                authService.register(req),
+                "Success",
+                HttpStatus.CREATED
+        );
     }
 
-    @GetMapping("/home")
-    public String securedHome() {
-        return "Secured Home Page";
+    @PostMapping("/refresh")
+    public ResponseEntity<?> refreshToken(@RequestHeader("Authorization") String refreshToken) {
+        return Response.renderJSON(
+                authService.refreshToken(refreshToken)
+        );
     }
 
-    @GetMapping("/oauth2/redirect")
-    public ResponseEntity<?> handleOAuth2Redirect(@RequestParam("token") String token) {
-        if (jwtTokenProvider.validateToken(token)) {
-            String userId = jwtTokenProvider.getUserIdFromToken(token);
-            return Response.renderJSON(Collections.singletonMap("token", token), "Authentication successful");
-        } else {
-            return Response.renderJSON(null, "Invalid token", HttpStatus.UNAUTHORIZED);
-        }
-    }
 }
