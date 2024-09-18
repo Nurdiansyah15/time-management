@@ -22,9 +22,11 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -38,6 +40,54 @@ public class TaskServiceImpl implements TaskService {
     private final UserRepository userRepository;
     private final CloudinaryService cloudinaryService;
 
+
+    @Override
+    @Transactional
+    @Scheduled(cron = "0 0 0 * * ?") // Run daily at midnight
+    public void generateRecurringTasks() {
+        LocalDate today = LocalDate.now();
+        List<TaskEntity> recurringTasks = taskRepository.findAllRecurringTasks();
+
+        for (TaskEntity task : recurringTasks) {
+            if (shouldGenerateTaskForToday(task, today)) {
+                createNewTaskInstance(task, today);
+            }
+        }
+    }
+
+    private boolean shouldGenerateTaskForToday(TaskEntity task, LocalDate today) {
+        switch (task.getRepetitionType()) {
+            case DAILY:
+                return true;
+            case WEEKLY:
+                return task.getRepetitionDays().contains(today.getDayOfWeek().getValue());
+            case MONTHLY:
+                return today.getDayOfMonth() == task.getRepetitionStartDate().getDayOfMonth();
+            case RANGE:
+                return today.isAfter(task.getRepetitionStartDate().minusDays(1)) &&
+                        today.isBefore(task.getRepetitionEndDate().plusDays(1)) &&
+                        (today.toEpochDay() - task.getRepetitionStartDate().toEpochDay()) % task.getRepetitionInterval() == 0;
+            case LIFETIME:
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    private void createNewTaskInstance(TaskEntity originalTask, LocalDate today) {
+        TaskEntity newTask = TaskEntity.builder()
+                .id(UUID.randomUUID().toString())
+                .title(originalTask.getTitle())
+                .energy(originalTask.getEnergy())
+                .notes(originalTask.getNotes())
+                .status("PENDING")
+                .duration(originalTask.getDuration())
+                .priority(originalTask.getPriority())
+                .user(originalTask.getUser())
+                .build();
+
+        taskRepository.save(newTask);
+    }
 
     @Override
     @Transactional

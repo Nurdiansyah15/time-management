@@ -5,7 +5,7 @@ import com.tunduh.timemanagement.validation.EnumValidator;
 import jakarta.validation.constraints.*;
 import lombok.Data;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.Set;
 
 @Data
@@ -34,10 +34,16 @@ public class TaskRequest {
     private String priority;
 
     @EnumValidator(enumClass = RepetitionType.class, message = "Invalid repetition type")
-    private String repetitionType;
+    private RepetitionType repetitionType;
 
     private Set<@Min(1) @Max(7) Integer> repetitionDays;
 
+    @FutureOrPresent(message = "Repetition start date must be in the present or future")
+    private LocalDate repetitionStartDate;
+
     @Future(message = "Repetition end date must be in the future")
-    private LocalDateTime repetitionEndDate;
+    private LocalDate repetitionEndDate;
+
+    @Min(value = 1, message = "Repetition interval must be at least 1")
+    private Integer repetitionInterval;
 }

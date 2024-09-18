@@ -5,6 +5,7 @@ import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Set;
 
@@ -46,8 +47,14 @@ public class TaskEntity {
     @Enumerated(EnumType.STRING)
     private RepetitionType repetitionType;
 
+    @Column(name = "repetition_start_date")
+    private LocalDate repetitionStartDate;
+
     @Column(name = "repetition_end_date")
-    private LocalDateTime repetitionEndDate;
+    private LocalDate repetitionEndDate;
+
+    @Column(name = "repetition_interval")
+    private Integer repetitionInterval;
 
     @ManyToOne
     @JoinColumn(name = "user_id")
@@ -65,6 +72,6 @@ public class TaskEntity {
     private LocalDateTime updatedAt;
 
     public enum RepetitionType {
-        NONE, DAILY, WEEKLY, MONTHLY, YEARLY
+        NONE, DAILY, WEEKLY, MONTHLY, RANGE, LIFETIME
     }
 }
