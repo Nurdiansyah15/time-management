@@ -1,4 +1,4 @@
-package com.tunduh.timemanagement.timemanagement;
+package com.tunduh.timemanagement;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
