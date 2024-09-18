@@ -3,8 +3,10 @@ package com.tunduh.timemanagement.controller;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.tunduh.timemanagement.dto.request.TaskRequest;
 import com.tunduh.timemanagement.dto.request.TaskSessionRequest;
+import com.tunduh.timemanagement.dto.request.TaskSyncRequest;
 import com.tunduh.timemanagement.dto.response.TaskResponse;
 import com.tunduh.timemanagement.dto.response.TaskSessionResponse;
+import com.tunduh.timemanagement.dto.response.TaskSyncResponse;
 import com.tunduh.timemanagement.entity.UserEntity;
 import com.tunduh.timemanagement.service.TaskService;
 import com.tunduh.timemanagement.utils.pagination.CustomPagination;
@@ -19,6 +21,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/tasks")
@@ -138,5 +142,13 @@ public class TaskController {
         UserEntity user = (UserEntity) authentication.getPrincipal();
         CustomPagination<TaskSessionResponse> sessions = taskService.getTaskSessions(taskId, user.getId(), page, size);
         return Response.renderJSON(sessions);
+    }
+
+    @PostMapping("/sync")
+    @Operation(summary = "Synchronize tasks between devices")
+    public ResponseEntity<?> synchronizeTasks(@RequestBody List<TaskSyncRequest> syncRequests, Authentication authentication) {
+        UserEntity user = (UserEntity) authentication.getPrincipal();
+        List<TaskSyncResponse> syncResponses = taskService.synchronizeTasks(user.getId(), syncRequests);
+        return Response.renderJSON(syncResponses, "Tasks synchronized successfully");
     }
 }
