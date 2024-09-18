@@ -44,6 +44,9 @@ public class SecurityConfig {
     @Value("${app.oauth2.authorizedRedirectUris}")
     private String[] authorizedRedirectUris;
 
+    @Value("${app.oauth2.redirectUri}")
+    private String redirectUri;
+
     public SecurityConfig(CustomOAuth2UserService customOAuth2UserService,
                           OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler,
                           HttpCookieOAuth2AuthorizationRequestRepository httpCookieOAuth2AuthorizationRequestRepository,

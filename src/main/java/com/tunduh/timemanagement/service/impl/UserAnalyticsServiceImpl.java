@@ -31,20 +31,21 @@ public class UserAnalyticsServiceImpl implements UserAnalyticsService {
         long completedTasks = taskRepository.countByUserIdAndStatus(userId, "COMPLETED");
         long pendingTasks = taskRepository.countByUserIdAndStatus(userId, "PENDING");
         long completedMissions = missionRepository.countByUsersIdAndStatus(userId, "COMPLETED");
-        Double totalSpent = transactionRepository.sumTotalPriceByUserId(userId);
+        Double totalPointsChange = transactionRepository.sumPointsChangeByUserId(userId);
 
         return UserAnalyticsResponse.builder()
                 .totalTasks(totalTasks)
                 .completedTasks(completedTasks)
                 .pendingTasks(pendingTasks)
                 .completedMissions(completedMissions)
-                .totalSpent(totalSpent != null ? totalSpent : 0.0)
+                .totalPointsChange(totalPointsChange != null ? totalPointsChange : 0.0)
                 .build();
     }
 
     @Override
     public UserAnalyticsResponse getTaskAnalytics(String userId, LocalDate startDate, LocalDate endDate) {
-        List<Map<String, Object>> taskData = taskRepository.getTaskDataByUserIdAndDateRange(userId, startDate.atStartOfDay(), endDate.atTime(23, 59, 59));
+        List<Map<String, Object>> taskData = taskRepository.getTaskDataByUserIdAndDateRange(userId,
+                startDate.atStartOfDay(), endDate.atTime(23, 59, 59));
 
         Map<String, Long> taskCompletionByDate = taskData.stream()
                 .collect(Collectors.groupingBy(
@@ -81,29 +82,32 @@ public class UserAnalyticsServiceImpl implements UserAnalyticsService {
 
     @Override
     public UserAnalyticsResponse getBudgetAnalytics(String userId, LocalDate startDate, LocalDate endDate) {
-        Double totalSpent = transactionRepository.sumTotalPriceByUserIdAndDateRange(userId, startDate.atStartOfDay(), endDate.atTime(23, 59, 59));
-        List<Map<String, Double>> spendingByCategoryList = transactionRepository.getSpendingByCategoryForUserAndDateRange(userId, startDate.atStartOfDay(), endDate.atTime(23, 59, 59));
+        Double totalPointsChange = transactionRepository.sumPointsChangeByUserIdAndDateRange(userId,
+                startDate.atStartOfDay(), endDate.atTime(23, 59, 59));
 
-        Map<String, Double> spendingByCategory = spendingByCategoryList.stream()
+        List<Map<String, Object>> transactionSummary = transactionRepository.getTransactionSummaryByUserIdAndDateRange(userId,
+                startDate.atStartOfDay(), endDate.atTime(23, 59, 59));
+
+        Map<String, Double> pointsChangeByCategory = transactionSummary.stream()
                 .collect(Collectors.toMap(
                         m -> m.get("category").toString(),
-                        m -> m.get("totalSpent")
+                        m -> ((Number) m.get("totalChange")).doubleValue()
                 ));
 
         return UserAnalyticsResponse.builder()
-                .totalSpent(totalSpent != null ? totalSpent : 0.0)
-                .spendingByCategory(spendingByCategory)
+                .totalPointsChange(totalPointsChange != null ? totalPointsChange : 0.0)
+                .pointsChangeByCategory(pointsChangeByCategory)
                 .build();
     }
 
     @Override
     public String getTaskAnalyticsCSV(String userId, LocalDate startDate, LocalDate endDate) {
         log.info("Generating task analytics CSV for user {} from {} to {}", userId, startDate, endDate);
-        List<Map<String, Object>> taskData = taskRepository.getTaskDataByUserIdAndDateRange(userId, startDate.atStartOfDay(), endDate.atTime(23, 59, 59));
+        List<Map<String, Object>> taskData = taskRepository.getTaskDataByUserIdAndDateRange(userId,
+                startDate.atStartOfDay(), endDate.atTime(23, 59, 59));
 
         List<String[]> csvData = new ArrayList<>();
         csvData.add(new String[]{"Date", "Status", "Count"});
-
         for (Map<String, Object> entry : taskData) {
             csvData.add(new String[]{
                     entry.get("date").toString(),
@@ -111,7 +115,6 @@ public class UserAnalyticsServiceImpl implements UserAnalyticsService {
                     entry.get("count").toString()
             });
         }
-
         return CSVUtil.generateCSV(csvData);
     }
 
@@ -136,18 +139,17 @@ public class UserAnalyticsServiceImpl implements UserAnalyticsService {
     @Override
     public String getBudgetAnalyticsCSV(String userId, LocalDate startDate, LocalDate endDate) {
         log.info("Generating budget analytics CSV for user {} from {} to {}", userId, startDate, endDate);
-        List<Map<String, Double>> spendingData = transactionRepository.getSpendingByCategoryForUserAndDateRange(userId, startDate.atStartOfDay(), endDate.atTime(23, 59, 59));
+        List<Map<String, Object>> transactionSummary = transactionRepository.getTransactionSummaryByUserIdAndDateRange(userId,
+                startDate.atStartOfDay(), endDate.atTime(23, 59, 59));
 
         List<String[]> csvData = new ArrayList<>();
-        csvData.add(new String[]{"Category", "Total Spent"});
-
-        for (Map<String, Double> entry : spendingData) {
+        csvData.add(new String[]{"Category", "Total Points Change"});
+        for (Map<String, Object> entry : transactionSummary) {
             csvData.add(new String[]{
                     entry.get("category").toString(),
-                    entry.get("totalSpent").toString()
+                    entry.get("totalChange").toString()
             });
         }
-
         return CSVUtil.generateCSV(csvData);
     }
 }

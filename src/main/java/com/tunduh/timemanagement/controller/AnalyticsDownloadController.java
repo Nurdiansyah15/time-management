@@ -4,6 +4,7 @@ import com.tunduh.timemanagement.entity.UserEntity;
 import com.tunduh.timemanagement.service.UserAnalyticsService;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -18,9 +19,8 @@ import java.time.LocalDate;
 @RestController
 @RequestMapping("/api/analytics/download")
 @RequiredArgsConstructor
+@Slf4j
 public class AnalyticsDownloadController {
-    private static final Logger logger = LoggerFactory.getLogger(AnalyticsDownloadController.class);
-
     private final UserAnalyticsService userAnalyticsService;
 
     @GetMapping("/tasks")
@@ -30,7 +30,7 @@ public class AnalyticsDownloadController {
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
         UserEntity user = (UserEntity) authentication.getPrincipal();
-        logger.info("Downloading task analytics CSV for user {} from {} to {}", user.getId(), startDate, endDate);
+        log.info("Downloading task analytics CSV for user {} from {} to {}", user.getId(), startDate, endDate);
 
         String csvData = userAnalyticsService.getTaskAnalyticsCSV(user.getId(), startDate, endDate);
 
@@ -44,7 +44,7 @@ public class AnalyticsDownloadController {
     @Operation(summary = "Download mission analytics as CSV")
     public ResponseEntity<byte[]> downloadMissionAnalytics(Authentication authentication) {
         UserEntity user = (UserEntity) authentication.getPrincipal();
-        logger.info("Downloading mission analytics CSV for user {}", user.getId());
+        log.info("Downloading mission analytics CSV for user {}", user.getId());
 
         String csvData = userAnalyticsService.getMissionAnalyticsCSV(user.getId());
 
@@ -61,7 +61,7 @@ public class AnalyticsDownloadController {
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
         UserEntity user = (UserEntity) authentication.getPrincipal();
-        logger.info("Downloading budget analytics CSV for user {} from {} to {}", user.getId(), startDate, endDate);
+        log.info("Downloading budget analytics CSV for user {} from {} to {}", user.getId(), startDate, endDate);
 
         String csvData = userAnalyticsService.getBudgetAnalyticsCSV(user.getId(), startDate, endDate);
 

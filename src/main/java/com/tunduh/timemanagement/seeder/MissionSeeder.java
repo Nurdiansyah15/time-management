@@ -10,7 +10,6 @@ import java.time.LocalDateTime;
 @Component
 @RequiredArgsConstructor
 public class MissionSeeder implements Seeder {
-
     private final MissionRepository missionRepository;
 
     @Override

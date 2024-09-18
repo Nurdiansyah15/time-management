@@ -14,7 +14,6 @@ import java.util.Optional;
 @Repository
 public interface MissionRepository extends JpaRepository<MissionEntity, String>, JpaSpecificationExecutor<MissionEntity> {
     Optional<MissionEntity> findByIdAndUsersId(String id, String userId);
-
     long countByUsersIdAndStatus(String userId, String status);
 
     @Query("SELECT new map(m.status as status, COUNT(m) as count) " +

@@ -38,6 +38,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.chrono.ChronoLocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -52,6 +53,73 @@ public class TaskServiceImpl implements TaskService {
     private final TaskSessionRepository taskSessionRepository;
     private final UserRepository userRepository;
     private final CloudinaryService cloudinaryService;
+
+
+    @Transactional
+    @Override
+    public void generateRecurringTasks() {
+        LocalDateTime now = LocalDateTime.now();
+        List<TaskEntity> recurringTasks = taskRepository.findAllActiveRecurringTasks(now);
+
+        for (TaskEntity task : recurringTasks) {
+            if (shouldGenerateTaskForToday(task, now)) {
+                createNewTaskInstance(task, now);
+            }
+        }
+    }
+
+    private boolean shouldGenerateTaskForToday(TaskEntity task, LocalDateTime now) {
+        switch (task.getRepetitionType()) {
+            case DAILY:
+                return true;
+            case WEEKLY:
+                return task.getRepetitionDays().contains(now.getDayOfWeek().getValue());
+            case MONTHLY:
+                return now.getDayOfMonth() == task.getCreatedAt().getDayOfMonth();
+            case RANGE:
+                return isWithinRange(task, now);
+            case LIFETIME:
+                return true;
+            case NONE:
+            default:
+                return false;
+        }
+    }
+
+    private boolean isWithinRange(TaskEntity task, LocalDateTime now) {
+        if (task.getRepetitionStartDate() == null || task.getRepetitionEndDate() == null || task.getRepetitionInterval() == null) {
+            return false;
+        }
+
+        if (now.isBefore(task.getRepetitionStartDate()) || now.isAfter(task.getRepetitionEndDate())) {
+            return false;
+        }
+
+        long daysSinceStart = ChronoUnit.DAYS.between(task.getRepetitionStartDate(), now);
+        return daysSinceStart % task.getRepetitionInterval() == 0;
+    }
+
+    private void createNewTaskInstance(TaskEntity originalTask, LocalDateTime now) {
+        TaskEntity newTask = TaskEntity.builder()
+                .id(UUID.randomUUID().toString())
+                .title(originalTask.getTitle())
+                .energy(originalTask.getEnergy())
+                .notes(originalTask.getNotes())
+                .status("PENDING")
+                .duration(originalTask.getDuration())
+                .priority(originalTask.getPriority())
+                .user(originalTask.getUser())
+                .repetitionType(originalTask.getRepetitionType())
+                .repetitionDays(originalTask.getRepetitionDays())
+                .repetitionStartDate(originalTask.getRepetitionStartDate())
+                .repetitionEndDate(originalTask.getRepetitionEndDate())
+                .repetitionInterval(originalTask.getRepetitionInterval())
+                .createdAt(now)
+                .updatedAt(now)
+                .build();
+        taskRepository.save(newTask);
+    }
+
 
     @Override
     @Transactional
@@ -147,9 +215,14 @@ public class TaskServiceImpl implements TaskService {
     @Transactional
     public List<TaskSyncResponse> synchronizeTasks(String userId, List<TaskSyncRequest> syncRequests) {
         List<TaskSyncResponse> responses = new ArrayList<>();
-        Map<String, TaskEntity> existingTasks = taskRepository.findByUserIdIn(
-                syncRequests.stream().map(TaskSyncRequest::getTaskId).collect(Collectors.toList())
-        ).stream().collect(Collectors.toMap(TaskEntity::getId, task -> task));
+        List<String> taskIds = syncRequests.stream()
+                .map(TaskSyncRequest::getTaskId)
+                .collect(Collectors.toList());
+
+        List<TaskEntity> tasks = taskRepository.findByIdIn(taskIds);
+
+        Map<String, TaskEntity> existingTasks = tasks.stream()
+                .collect(Collectors.toMap(TaskEntity::getId, task -> task));
 
         for (TaskSyncRequest syncRequest : syncRequests) {
             TaskEntity task = existingTasks.get(syncRequest.getTaskId());
@@ -241,20 +314,6 @@ public class TaskServiceImpl implements TaskService {
         TaskSyncResponse response = new TaskSyncResponse();
         // Set task and session details in the response
         return response;
-    }
-
-    @Override
-    @Transactional
-    @Scheduled(cron = "0 0 0 * * ?") // Run daily at midnight
-    public void generateRecurringTasks() {
-        LocalDate today = LocalDate.now();
-        List<TaskEntity> recurringTasks = taskRepository.findAllRecurringTasks();
-
-        for (TaskEntity task : recurringTasks) {
-            if (shouldGenerateTaskForToday(task, today)) {
-                createNewTaskInstance(task, today);
-            }
-        }
     }
 
     private boolean shouldGenerateTaskForToday(TaskEntity task, LocalDate today) {

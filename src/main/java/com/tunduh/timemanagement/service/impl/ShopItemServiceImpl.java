@@ -1,86 +1,84 @@
 package com.tunduh.timemanagement.service.impl;
 
 import com.tunduh.timemanagement.dto.request.ShopItemRequest;
-import com.tunduh.timemanagement.dto.response.MissionResponse;
-import com.tunduh.timemanagement.dto.response.ShopItemResponse;
 import com.tunduh.timemanagement.dto.response.PurchaseResponse;
-import com.tunduh.timemanagement.entity.MissionEntity;
+import com.tunduh.timemanagement.dto.response.ShopItemResponse;
 import com.tunduh.timemanagement.entity.ShopItemEntity;
 import com.tunduh.timemanagement.entity.UserEntity;
-import com.tunduh.timemanagement.entity.UserTransactionEntity;
+import com.tunduh.timemanagement.entity.PurchaseEntity;
 import com.tunduh.timemanagement.exception.InsufficientPointsException;
 import com.tunduh.timemanagement.exception.ResourceNotFoundException;
 import com.tunduh.timemanagement.repository.ShopItemRepository;
 import com.tunduh.timemanagement.repository.UserRepository;
-import com.tunduh.timemanagement.repository.UserTransactionRepository;
+import com.tunduh.timemanagement.repository.PurchaseRepository;
 import com.tunduh.timemanagement.service.CloudinaryService;
 import com.tunduh.timemanagement.service.ShopItemService;
 import com.tunduh.timemanagement.utils.pagination.CustomPagination;
-import com.tunduh.timemanagement.utils.specification.ShopItemSpecification;
-import jakarta.persistence.EntityNotFoundException;
-import jakarta.transaction.Transactional;
+import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
-@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ShopItemServiceImpl implements ShopItemService {
     private final ShopItemRepository shopItemRepository;
     private final UserRepository userRepository;
-    private final UserTransactionRepository userTransactionRepository;
+    private final PurchaseRepository purchaseRepository;
     private final CloudinaryService cloudinaryService;
 
     @Override
     @Transactional
+    @CacheEvict(value = "shopItems", allEntries = true)
     public ShopItemResponse createShopItem(ShopItemRequest shopItemRequest) {
         ShopItemEntity shopItem = ShopItemEntity.builder()
-                .id(UUID.randomUUID().toString())
                 .name(shopItemRequest.getName())
                 .price(shopItemRequest.getPrice())
                 .stock(shopItemRequest.getStock())
-                .type(shopItemRequest.getType())
+                .category(shopItemRequest.getCategory())
+                .description(shopItemRequest.getDescription())
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
                 .build();
-
         ShopItemEntity savedShopItem = shopItemRepository.save(shopItem);
         return mapToShopItemResponse(savedShopItem);
     }
 
     @Override
     @Transactional
+    @CacheEvict(value = "shopItems", allEntries = true)
     public ShopItemResponse updatePhoto(MultipartFile file, String id) {
         ShopItemEntity shopItem = shopItemRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Shop item with id " + id + " not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Shop item not found"));
         String url = cloudinaryService.uploadFile(file, "shop-item");
         shopItem.setItemPicture(url);
-        ShopItemEntity savedShopItem = shopItemRepository.save(shopItem);
-        return mapToShopItemResponse(savedShopItem);
+        ShopItemEntity updatedShopItem = shopItemRepository.save(shopItem);
+        return mapToShopItemResponse(updatedShopItem);
     }
 
     @Override
-    public CustomPagination<ShopItemResponse> getAllShopItems(int page, int size, String sort, String name, Integer maxPrice) {
+    @Cacheable(value = "shopItems", key = "#root.methodName + '_' + #page + '_' + #size + '_' + #sort + '_' + #name + '_' + #maxPrice + '_' + #category")
+    public CustomPagination<ShopItemResponse> getAllShopItems(int page, int size, String sort, String name, Integer maxPrice, ShopItemEntity.ItemCategory category) {
         Pageable pageable = createPageable(page, size, sort);
-        Specification<ShopItemEntity> spec = ShopItemSpecification.getSpecification(name, maxPrice);
-
+        Specification<ShopItemEntity> spec = createSpecification(name, maxPrice, category);
         Page<ShopItemEntity> shopItemPage = shopItemRepository.findAll(spec, pageable);
         return new CustomPagination<>(shopItemPage.map(this::mapToShopItemResponse));
     }
 
     @Override
+    @Cacheable(value = "shopItem", key = "#id")
     public ShopItemResponse getShopItemById(String id) {
         ShopItemEntity shopItem = shopItemRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Shop item not found"));
@@ -89,20 +87,23 @@ public class ShopItemServiceImpl implements ShopItemService {
 
     @Override
     @Transactional
+    @CacheEvict(value = {"shopItems", "shopItem"}, key = "#id")
     public ShopItemResponse updateShopItem(String id, ShopItemRequest shopItemRequest) {
         ShopItemEntity shopItem = shopItemRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Shop item not found"));
-
         shopItem.setName(shopItemRequest.getName());
         shopItem.setPrice(shopItemRequest.getPrice());
+        shopItem.setStock(shopItemRequest.getStock());
+        shopItem.setCategory(shopItemRequest.getCategory());
+        shopItem.setDescription(shopItemRequest.getDescription());
         shopItem.setUpdatedAt(LocalDateTime.now());
-
         ShopItemEntity updatedShopItem = shopItemRepository.save(shopItem);
         return mapToShopItemResponse(updatedShopItem);
     }
 
     @Override
     @Transactional
+    @CacheEvict(value = {"shopItems", "shopItem"}, key = "#id")
     public void deleteShopItem(String id) {
         ShopItemEntity shopItem = shopItemRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Shop item not found"));
@@ -114,39 +115,39 @@ public class ShopItemServiceImpl implements ShopItemService {
     public PurchaseResponse purchaseItem(String itemId, int quantity, String userId) {
         ShopItemEntity shopItem = shopItemRepository.findById(itemId)
                 .orElseThrow(() -> new ResourceNotFoundException("Shop item not found"));
-
         UserEntity user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         int totalPrice = shopItem.getPrice() * quantity;
-
         if (user.getUserPoint() < totalPrice) {
             throw new InsufficientPointsException("User does not have enough points to make this purchase");
+        }
+        if (shopItem.getStock() < quantity) {
+            throw new IllegalStateException("Not enough stock available");
         }
 
         shopItem.setStock(shopItem.getStock() - quantity);
         user.setUserPoint(user.getUserPoint() - totalPrice);
         userRepository.save(user);
 
-        UserTransactionEntity transaction = UserTransactionEntity.builder()
-                .id(UUID.randomUUID().toString())
+        PurchaseEntity purchase = PurchaseEntity.builder()
                 .user(user)
                 .shopItem(shopItem)
                 .quantity(quantity)
                 .totalPrice(totalPrice)
-                .transactionDate(LocalDateTime.now())
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
                 .build();
-
-        userTransactionRepository.save(transaction);
+        PurchaseEntity savedPurchase = purchaseRepository.save(purchase);
 
         return PurchaseResponse.builder()
-                .transactionId(transaction.getId())
-                .itemName(shopItem.getName())
+                .id(savedPurchase.getId())
+                .userId(user.getId())
+                .shopItemId(shopItem.getId())
+                .shopItemName(shopItem.getName())
                 .quantity(quantity)
                 .totalPrice(totalPrice)
-                .purchaseDate(transaction.getTransactionDate())
+                .createdAt(savedPurchase.getCreatedAt())
                 .build();
     }
 
@@ -174,5 +175,21 @@ public class ShopItemServiceImpl implements ShopItemService {
             }
         }
         return PageRequest.of(page, size, Sort.by(orders));
+    }
+
+    private Specification<ShopItemEntity> createSpecification(String name, Integer maxPrice, ShopItemEntity.ItemCategory category) {
+        return (root, query, criteriaBuilder) -> {
+            List<Predicate> predicates = new ArrayList<>();
+            if (name != null && !name.isEmpty()) {
+                predicates.add(criteriaBuilder.like(criteriaBuilder.lower(root.get("name")), "%" + name.toLowerCase() + "%"));
+            }
+            if (maxPrice != null) {
+                predicates.add(criteriaBuilder.lessThanOrEqualTo(root.get("price"), maxPrice));
+            }
+            if (category != null) {
+                predicates.add(criteriaBuilder.equal(root.get("category"), category));
+            }
+            return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+        };
     }
 }

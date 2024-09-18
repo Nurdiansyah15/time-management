@@ -29,7 +29,7 @@ public class MissionEntity {
     @Column(nullable = false)
     private String status;
 
-    @Column(nullable = false)
+    @Column(name = "point_reward", nullable = false)
     private Integer pointReward;
 
     @Column(name = "mission_picture")

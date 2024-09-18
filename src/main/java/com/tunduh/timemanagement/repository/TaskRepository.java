@@ -23,6 +23,8 @@ public interface TaskRepository extends JpaRepository<TaskEntity, String>, JpaSp
     long countByUserId(String userId);
     long countByUserIdAndStatus(String userId, String status);
 
+    List<TaskEntity> findByIdIn(List<String> taskIds);
+
     @Query("SELECT new map(DATE(t.createdAt) as date, COUNT(t) as count) " +
             "FROM TaskEntity t " +
             "WHERE t.user.id = :userId AND t.createdAt >= :startDate " +
@@ -63,13 +65,6 @@ public interface TaskRepository extends JpaRepository<TaskEntity, String>, JpaSp
             "AND (t.repetitionEndDate IS NULL OR t.repetitionEndDate >= :currentDate)")
     List<TaskEntity> findMonthlyRecurringTasks(@Param("currentDate") LocalDateTime currentDate);
 
-    @Query("SELECT t FROM TaskEntity t " +
-            "WHERE t.repetitionType = com.tunduh.timemanagement.entity.TaskEntity.RepetitionType.YEARLY " +
-            "AND DAY(t.createdAt) = DAY(:currentDate) " +
-            "AND MONTH(t.createdAt) = MONTH(:currentDate) " +
-            "AND (t.repetitionEndDate IS NULL OR t.repetitionEndDate >= :currentDate)")
-    List<TaskEntity> findYearlyRecurringTasks(@Param("currentDate") LocalDateTime currentDate);
-
     @Query("SELECT new map(DATE(t.createdAt) as date, t.status as status, COUNT(t) as count) " +
             "FROM TaskEntity t " +
             "WHERE t.user.id = :userId AND t.createdAt BETWEEN :startDate AND :endDate " +
@@ -77,9 +72,6 @@ public interface TaskRepository extends JpaRepository<TaskEntity, String>, JpaSp
     List<Map<String, Object>> getTaskDataByUserIdAndDateRange(@Param("userId") String userId,
                                                               @Param("startDate") LocalDateTime startDate,
                                                               @Param("endDate") LocalDateTime endDate);
-
-    Optional<TaskEntity> findByUserIdIn(List<String> collect);
-    List<TaskEntity> findAllRecurringTasks();
 
     List<TaskEntity> findByUserAndCreatedAtAfter(UserEntity user, LocalDateTime missionStartTime);
 }

@@ -28,6 +28,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -115,9 +116,10 @@ public class AdminServiceImpl implements AdminService {
 
     @Override
     public AnalyticsResponse getUserAnalytics() {
+        LocalDate thirtyDaysAgo = LocalDate.now().minusDays(30);
         return AnalyticsResponse.builder()
                 .totalUsers(userRepository.count())
-                .activeUsers(userRepository.countActiveUsers())
+                .activeUsers(userRepository.countActiveUsers(thirtyDaysAgo))
                 .averageTasksPerUser(userRepository.getAverageTasksPerUser())
                 .build();
     }

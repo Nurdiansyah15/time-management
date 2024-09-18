@@ -47,7 +47,7 @@ public class ShopItemEntity {
     private LocalDateTime updatedAt;
 
     @OneToMany(mappedBy = "shopItem")
-    private Set<TransactionEntity> transactions;
+    private Set<PurchaseEntity> purchases;
 
     public enum ItemCategory {
         AVATAR,

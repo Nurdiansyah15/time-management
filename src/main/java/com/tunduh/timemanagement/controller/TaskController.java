@@ -41,8 +41,6 @@ public class TaskController {
         return Response.renderJSON(createdTask, "Task created successfully!");
     }
 
-
-
     @PutMapping("/{id}/photos")
     @Operation(summary = "Update photo")
     public ResponseEntity<?> updatePhoto(

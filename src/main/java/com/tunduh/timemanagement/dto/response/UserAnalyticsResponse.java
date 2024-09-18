@@ -12,9 +12,9 @@ public class UserAnalyticsResponse {
     private long completedTasks;
     private long pendingTasks;
     private long completedMissions;
-    private double totalSpent;
+    private double totalPointsChange;
     private Map<String, Long> taskCompletionByDate;
     private Map<String, Long> taskStatusCounts;
     private Map<String, Long> missionStatusCounts;
-    private Map<String, Double> spendingByCategory;
+    private Map<String, Double> pointsChangeByCategory;
 }
