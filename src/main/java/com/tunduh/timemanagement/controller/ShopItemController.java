@@ -5,6 +5,7 @@ import com.tunduh.timemanagement.dto.request.ShopItemRequest;
 import com.tunduh.timemanagement.dto.request.PurchaseRequest;
 import com.tunduh.timemanagement.dto.response.ShopItemResponse;
 import com.tunduh.timemanagement.dto.response.PurchaseResponse;
+import com.tunduh.timemanagement.entity.ShopItemEntity;
 import com.tunduh.timemanagement.entity.UserEntity;
 import com.tunduh.timemanagement.service.ShopItemService;
 import com.tunduh.timemanagement.utils.pagination.CustomPagination;
@@ -36,11 +37,10 @@ public class ShopItemController {
     }
 
     @PutMapping("/{id}/photos")
-    @Operation(summary = "Update photo")
-    public ResponseEntity<?> updatePhoto(
-            @RequestPart("images") MultipartFile file,
-            @PathVariable String id) throws JsonProcessingException {
-        return Response.renderJSON(shopItemService.updatePhoto(file, id), "PHOTOS UPLOADED");
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Update shop item photo")
+    public ResponseEntity<?> updatePhoto(@RequestPart("image") MultipartFile file, @PathVariable String id) {
+        return Response.renderJSON(shopItemService.updatePhoto(file, id), "Photo updated successfully");
     }
 
     @GetMapping
@@ -50,8 +50,9 @@ public class ShopItemController {
             @Parameter(description = "Page size") @RequestParam(defaultValue = "10") int size,
             @Parameter(description = "Sort parameter (e.g., 'name,asc' or 'price,desc')") @RequestParam(required = false) String sort,
             @Parameter(description = "Filter by name") @RequestParam(required = false) String name,
-            @Parameter(description = "Filter by max price") @RequestParam(required = false) Integer maxPrice) {
-        CustomPagination<ShopItemResponse> shopItems = shopItemService.getAllShopItems(page, size, sort, name, maxPrice);
+            @Parameter(description = "Filter by max price") @RequestParam(required = false) Integer maxPrice,
+            @Parameter(description = "Filter by category") @RequestParam(required = false) ShopItemEntity.ItemCategory category) {
+        CustomPagination<ShopItemResponse> shopItems = shopItemService.getAllShopItems(page, size, sort, name, maxPrice, category);
         return Response.renderJSON(shopItems);
     }
 

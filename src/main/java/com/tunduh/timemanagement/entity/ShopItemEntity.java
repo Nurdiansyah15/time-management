@@ -7,18 +7,14 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 import java.util.Set;
-import java.util.UUID;
 
 @Entity
 @Data
-@Getter
-@Setter
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@Table(name = "shop_item")
+@Table(name = "shop_items")
 public class ShopItemEntity {
-
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
@@ -35,8 +31,12 @@ public class ShopItemEntity {
     @Column(nullable = false)
     private Integer stock;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private String type;
+    private ItemCategory category;
+
+    @Column(columnDefinition = "TEXT")
+    private String description;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -49,4 +49,9 @@ public class ShopItemEntity {
     @OneToMany(mappedBy = "shopItem")
     private Set<UserTransactionEntity> transactions;
 
+    public enum ItemCategory {
+        AVATAR,
+        APP_THEME,
+        OTHER
+    }
 }
