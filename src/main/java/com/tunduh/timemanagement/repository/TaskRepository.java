@@ -1,6 +1,7 @@
 package com.tunduh.timemanagement.repository;
 
 import com.tunduh.timemanagement.entity.TaskEntity;
+import com.tunduh.timemanagement.entity.UserEntity;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -79,4 +80,6 @@ public interface TaskRepository extends JpaRepository<TaskEntity, String>, JpaSp
 
     Optional<TaskEntity> findByUserIdIn(List<String> collect);
     List<TaskEntity> findAllRecurringTasks();
+
+    List<TaskEntity> findByUserAndCreatedAtAfter(UserEntity user, LocalDateTime missionStartTime);
 }

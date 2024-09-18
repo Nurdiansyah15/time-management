@@ -10,6 +10,9 @@ public class MissionRequest {
     @NotBlank(message = "Mission name is required")
     private String name;
 
+    @NotBlank(message = "Mission description is required")
+    private String description;
+
     @NotNull(message = "Point reward must be filled")
     @Min(value = 0, message = "Point reward must be non-negative")
     private Integer pointReward;
@@ -22,5 +25,9 @@ public class MissionRequest {
     @Min(value = 0, message = "Required duration must be non-negative")
     private Integer requiredDuration;
 
-    private String parentMissionId;
+    @NotNull(message = "Duration only flag must be specified")
+    private Boolean isDurationOnly;
+
+    @NotNull(message = "Task only flag must be specified")
+    private Boolean isTaskOnly;
 }

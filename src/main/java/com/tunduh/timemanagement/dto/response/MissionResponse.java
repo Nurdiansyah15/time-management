@@ -1,5 +1,6 @@
 package com.tunduh.timemanagement.dto.response;
 
+import jakarta.persistence.Column;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -15,10 +16,14 @@ public class MissionResponse {
 
     private String id;
     private String name;
-    private String progress;
+    private String description;
     private String status;
-    private Integer point;
+    private Integer pointReward;
     private String missionPicture;
-    private LocalDateTime createdAt;
+    private Integer requiredTaskCount;
+    private Integer requiredDuration;
+    private Boolean isDurationOnly;
+    private Boolean isTaskOnly;
     private LocalDateTime updatedAt;
+    private LocalDateTime createdAt;
 }

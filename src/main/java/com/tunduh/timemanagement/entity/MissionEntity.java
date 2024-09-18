@@ -24,6 +24,9 @@ public class MissionEntity {
     private String name;
 
     @Column(nullable = false)
+    private String description;
+
+    @Column(nullable = false)
     private String status;
 
     @Column(nullable = false)
@@ -32,12 +35,17 @@ public class MissionEntity {
     @Column(name = "mission_picture")
     private String missionPicture;
 
-    @ManyToOne
-    @JoinColumn(name = "parent_mission_id")
-    private MissionEntity parentMission;
+    @Column(nullable = false)
+    private Integer requiredTaskCount;
 
-    @OneToMany(mappedBy = "parentMission", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<MissionEntity> subMissions = new HashSet<>();
+    @Column(nullable = false)
+    private Integer requiredDuration;
+
+    @Column(nullable = false)
+    private Boolean isDurationOnly;
+
+    @Column(nullable = false)
+    private Boolean isTaskOnly;
 
     @ManyToMany
     @JoinTable(
@@ -46,12 +54,6 @@ public class MissionEntity {
             inverseJoinColumns = @JoinColumn(name = "user_id")
     )
     private Set<UserEntity> users = new HashSet<>();
-
-    @Column(nullable = false)
-    private Integer requiredTaskCount;
-
-    @Column(nullable = false)
-    private Integer requiredDuration;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
