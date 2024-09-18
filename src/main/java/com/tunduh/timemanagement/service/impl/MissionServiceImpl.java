@@ -16,6 +16,9 @@ import com.tunduh.timemanagement.service.TransactionService;
 import com.tunduh.timemanagement.utils.pagination.CustomPagination;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -28,6 +31,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class MissionServiceImpl implements MissionService {
     private final MissionRepository missionRepository;
     private final UserRepository userRepository;
@@ -38,6 +42,7 @@ public class MissionServiceImpl implements MissionService {
     @Override
     @Transactional
     public MissionResponse createMission(MissionRequest missionRequest) {
+        log.info("Creating new mission: {}", missionRequest.getName());
         MissionEntity mission = MissionEntity.builder()
                 .name(missionRequest.getName())
                 .description(missionRequest.getDescription())
@@ -50,22 +55,29 @@ public class MissionServiceImpl implements MissionService {
                 .build();
 
         MissionEntity savedMission = missionRepository.save(mission);
+        log.debug("Mission created with ID: {}", savedMission.getId());
         return mapToMissionResponse(savedMission);
     }
 
     @Override
     @Transactional
     public MissionResponse updatePhoto(MultipartFile file, String id) {
+        log.info("Updating photo for mission with ID: {}", id);
         MissionEntity mission = missionRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Mission not found"));
+                .orElseThrow(() -> {
+                    log.error("Mission not found with ID: {}", id);
+                    return new ResourceNotFoundException("Mission not found");
+                });
         String url = cloudinaryService.uploadFile(file, "mission");
         mission.setMissionPicture(url);
         MissionEntity updatedMission = missionRepository.save(mission);
+        log.debug("Mission photo updated for ID: {}", id);
         return mapToMissionResponse(updatedMission);
     }
 
     @Override
     public CustomPagination<MissionResponse> getAllMissions(int page, int size, String sort, String name, String status) {
+        log.info("Fetching missions with page: {}, size: {}, sort: {}, name: {}, status: {}", page, size, sort, name, status);
         Sort.Direction direction = Sort.Direction.ASC;
         if (sort.startsWith("-")) {
             direction = Sort.Direction.DESC;
@@ -84,21 +96,30 @@ public class MissionServiceImpl implements MissionService {
                 },
                 PageRequest.of(page, size, Sort.by(direction, sort))
         );
+        log.debug("Fetched {} missions", missionPage.getTotalElements());
         return new CustomPagination<>(missionPage.map(this::mapToMissionResponse));
     }
 
     @Override
     public MissionResponse getMissionById(String id) {
+        log.info("Fetching mission with ID: {}", id);
         MissionEntity mission = missionRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Mission not found"));
+                .orElseThrow(() -> {
+                    log.error("Mission not found with ID: {}", id);
+                    return new ResourceNotFoundException("Mission not found");
+                });
         return mapToMissionResponse(mission);
     }
 
     @Override
     @Transactional
     public MissionResponse updateMission(String id, MissionRequest missionRequest) {
+        log.info("Updating mission with ID: {}", id);
         MissionEntity mission = missionRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Mission not found"));
+                .orElseThrow(() -> {
+                    log.error("Mission not found with ID: {}", id);
+                    return new ResourceNotFoundException("Mission not found");
+                });
         mission.setName(missionRequest.getName());
         mission.setDescription(missionRequest.getDescription());
         mission.setPointReward(missionRequest.getPointReward());
@@ -107,35 +128,51 @@ public class MissionServiceImpl implements MissionService {
         mission.setIsDurationOnly(missionRequest.getIsDurationOnly());
         mission.setIsTaskOnly(missionRequest.getIsTaskOnly());
         MissionEntity updatedMission = missionRepository.save(mission);
+        log.debug("Mission updated with ID: {}", id);
         return mapToMissionResponse(updatedMission);
     }
 
     @Override
     @Transactional
     public void deleteMission(String id) {
+        log.info("Deleting mission with ID: {}", id);
         MissionEntity mission = missionRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Mission not found"));
+                .orElseThrow(() -> {
+                    log.error("Mission not found with ID: {}", id);
+                    return new ResourceNotFoundException("Mission not found");
+                });
         missionRepository.delete(mission);
+        log.debug("Mission deleted with ID: {}", id);
     }
 
     @Override
     @Transactional
     public MissionResponse claimMission(String id, String userId) {
+        log.info("Claiming mission with ID: {} for user ID: {}", id, userId);
         MissionEntity mission = missionRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Mission not found"));
+                .orElseThrow(() -> {
+                    log.error("Mission not found with ID: {}", id);
+                    return new ResourceNotFoundException("Mission not found");
+                });
         UserEntity user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+                .orElseThrow(() -> {
+                    log.error("User not found with ID: {}", userId);
+                    return new ResourceNotFoundException("User not found");
+                });
 
         if (!mission.getUsers().contains(user)) {
+            log.error("User {} is not assigned to mission {}", userId, id);
             throw new IllegalStateException("User is not assigned to this mission");
         }
 
         if (!"ACTIVE".equals(mission.getStatus())) {
+            log.error("Mission {} is not active", id);
             throw new IllegalStateException("Mission is not active");
         }
 
         boolean isCompleted = checkMissionCompletion(mission, user);
         if (!isCompleted) {
+            log.error("Mission {} requirements not met for user {}", id, userId);
             throw new IllegalStateException("Mission requirements not met");
         }
 
@@ -147,19 +184,28 @@ public class MissionServiceImpl implements MissionService {
                 TransactionEntity.TransactionType.MISSION_COMPLETION,
                 "Completed mission: " + mission.getName());
 
+        log.debug("Mission {} claimed successfully by user {}", id, userId);
         return mapToMissionResponse(mission);
     }
 
     @Override
     @Transactional
     public MissionResponse assignMissionToUser(String missionId, String userId) {
+        log.info("Assigning mission {} to user {}", missionId, userId);
         MissionEntity mission = missionRepository.findById(missionId)
-                .orElseThrow(() -> new ResourceNotFoundException("Mission not found"));
+                .orElseThrow(() -> {
+                    log.error("Mission not found with ID: {}", missionId);
+                    return new ResourceNotFoundException("Mission not found");
+                });
         UserEntity user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+                .orElseThrow(() -> {
+                    log.error("User not found with ID: {}", userId);
+                    return new ResourceNotFoundException("User not found");
+                });
 
         mission.getUsers().add(user);
         MissionEntity updatedMission = missionRepository.save(mission);
+        log.debug("Mission {} assigned to user {}", missionId, userId);
         return mapToMissionResponse(updatedMission);
     }
 
@@ -175,6 +221,8 @@ public class MissionServiceImpl implements MissionService {
                 .filter(task -> "COMPLETED".equals(task.getStatus()))
                 .mapToLong(TaskEntity::getDuration)
                 .sum();
+
+        log.debug("Mission completion check - Completed tasks: {}, Total duration: {}", completedTaskCount, totalDuration);
 
         if (mission.getIsDurationOnly()) {
             return totalDuration >= mission.getRequiredDuration();
