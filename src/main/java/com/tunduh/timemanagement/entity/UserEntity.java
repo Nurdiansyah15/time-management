@@ -9,7 +9,9 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
@@ -45,6 +47,12 @@ public class UserEntity implements UserDetails {
     @Column(name = "user_point")
     private Integer userPoint;
 
+    @Column(name = "reset_time")
+    private LocalTime resetTime;
+
+    @Column(name = "last_reset_date")
+    private LocalDate lastResetDate;
+
     @Column(name = "last_login_date")
     private LocalDateTime lastLoginDate;
 
@@ -63,7 +71,7 @@ public class UserEntity implements UserDetails {
     private Set<MissionEntity> missions;
 
     @OneToMany(mappedBy = "user")
-    private Set<UserTransactionEntity> transactions;
+    private Set<TransactionEntity> transactions;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

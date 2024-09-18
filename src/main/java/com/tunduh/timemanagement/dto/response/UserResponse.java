@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalTime;
+
 @Data
 @Builder
 @AllArgsConstructor
@@ -15,4 +17,5 @@ public class UserResponse {
     private String email;
     private String profilePicture;
     private Integer userPoint;
+    private LocalTime resetTime;
 }
