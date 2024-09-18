@@ -10,6 +10,8 @@ import com.tunduh.timemanagement.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,6 +30,7 @@ public class UserServiceImpl implements UserService {
     private final CloudinaryService cloudinaryService;
 
     @Override
+    @Cacheable(value = "user", key = "#userId")
     public UserResponse getCurrentUser(String userId) {
         UserEntity user = getUserById(userId);
         return mapToUserResponse(user);
@@ -35,6 +38,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
+    @CacheEvict(value = "user", key = "#userId")
     public UserResponse addPoints(String userId, int points) {
         UserEntity user = getUserById(userId);
         user.setUserPoint(user.getUserPoint() + points);
@@ -56,6 +60,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
+    @CacheEvict(value = "user", key = "#userId")
     public UserResponse updateUser(String userId, UserUpdateRequest updateRequest) {
         UserEntity user = getUserById(userId);
         user.setUsername(updateRequest.getUsername());

@@ -19,6 +19,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -41,6 +43,7 @@ public class MissionServiceImpl implements MissionService {
 
     @Override
     @Transactional
+    @CacheEvict(value = "missions", allEntries = true)
     public MissionResponse createMission(MissionRequest missionRequest) {
         log.info("Creating new mission: {}", missionRequest.getName());
         MissionEntity mission = MissionEntity.builder()
@@ -76,6 +79,7 @@ public class MissionServiceImpl implements MissionService {
     }
 
     @Override
+    @Cacheable(value = "missions")
     public CustomPagination<MissionResponse> getAllMissions(int page, int size, String sort, String name, String status) {
         log.info("Fetching missions with page: {}, size: {}, sort: {}, name: {}, status: {}", page, size, sort, name, status);
         Sort.Direction direction = Sort.Direction.ASC;
@@ -101,6 +105,7 @@ public class MissionServiceImpl implements MissionService {
     }
 
     @Override
+    @Cacheable(value = "mission", key = "#id")
     public MissionResponse getMissionById(String id) {
         log.info("Fetching mission with ID: {}", id);
         MissionEntity mission = missionRepository.findById(id)
@@ -113,6 +118,7 @@ public class MissionServiceImpl implements MissionService {
 
     @Override
     @Transactional
+    @CacheEvict(value = {"missions", "mission"}, key = "#id")
     public MissionResponse updateMission(String id, MissionRequest missionRequest) {
         log.info("Updating mission with ID: {}", id);
         MissionEntity mission = missionRepository.findById(id)
@@ -134,6 +140,7 @@ public class MissionServiceImpl implements MissionService {
 
     @Override
     @Transactional
+    @CacheEvict(value = {"missions", "mission"}, key = "#id")
     public void deleteMission(String id) {
         log.info("Deleting mission with ID: {}", id);
         MissionEntity mission = missionRepository.findById(id)

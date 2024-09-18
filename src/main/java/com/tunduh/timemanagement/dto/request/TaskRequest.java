@@ -6,6 +6,7 @@ import jakarta.validation.constraints.*;
 import lombok.Data;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Set;
 
 @Data
@@ -45,7 +46,7 @@ public class TaskRequest {
     private LocalDate repetitionStartDate;
 
     @Future(message = "Repetition end date must be in the future")
-    private LocalDate repetitionEndDate;
+    private LocalDateTime repetitionEndDate;
 
     @Min(value = 1, message = "Repetition interval must be at least 1")
     private Integer repetitionInterval;

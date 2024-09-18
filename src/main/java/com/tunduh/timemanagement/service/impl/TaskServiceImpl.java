@@ -4,11 +4,9 @@ import com.tunduh.timemanagement.dto.request.TaskRequest;
 import com.tunduh.timemanagement.dto.request.TaskSessionRequest;
 import com.tunduh.timemanagement.dto.request.TaskSessionSyncRequest;
 import com.tunduh.timemanagement.dto.request.TaskSyncRequest;
-import com.tunduh.timemanagement.dto.response.ShopItemResponse;
 import com.tunduh.timemanagement.dto.response.TaskResponse;
 import com.tunduh.timemanagement.dto.response.TaskSessionResponse;
 import com.tunduh.timemanagement.dto.response.TaskSyncResponse;
-import com.tunduh.timemanagement.entity.ShopItemEntity;
 import com.tunduh.timemanagement.entity.TaskEntity;
 import com.tunduh.timemanagement.entity.TaskSessionEntity;
 import com.tunduh.timemanagement.entity.UserEntity;
@@ -24,6 +22,8 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -293,6 +293,7 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     @Transactional
+    @CacheEvict(value = "tasks", key = "#userId")
     public TaskResponse createTask(TaskRequest taskRequest, String userId) {
         UserEntity user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
@@ -329,6 +330,7 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
+    @Cacheable(value = "tasks", key = "#userId")
     public CustomPagination<TaskResponse> getAllTasks(String userId, int page, int size, String sort, String title, String status) {
         Pageable pageable = createPageable(page, size, sort);
         Specification<TaskEntity> spec = TaskSpecification.getSpecification(title, status, userId);
@@ -342,6 +344,7 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
+    @Cacheable(value = "task", key = "#id")
     public TaskResponse getTaskById(String id, String userId) {
         TaskEntity task = taskRepository.findByIdAndUserId(id, userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Task not found for this user"));
@@ -354,6 +357,7 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     @Transactional
+    @CacheEvict(value = {"tasks", "task"}, key = "#id")
     public TaskResponse updateTask(String id, TaskRequest taskRequest, String userId) {
         TaskEntity task = taskRepository.findByIdAndUserId(id, userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Task not found for this user"));
@@ -378,6 +382,7 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     @Transactional
+    @CacheEvict(value = {"tasks", "task"}, key = "#id")
     public void deleteTask(String id, String userId) {
         TaskEntity task = taskRepository.findByIdAndUserId(id, userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Task not found for this user"));
