@@ -1,5 +1,8 @@
 package com.tunduh.timemanagement.service;
 
+import com.tunduh.timemanagement.dto.request.PurchaseRequest;
+import com.tunduh.timemanagement.dto.response.PurchaseResponse;
+import com.tunduh.timemanagement.utils.pagination.CustomPagination;
 import org.springframework.web.multipart.MultipartFile;
 
 public interface CloudinaryService {
@@ -8,4 +11,10 @@ public interface CloudinaryService {
     String updateFile(String url, MultipartFile newFile, String folderName);
 
     void deleteImage(String url);
+
+    interface PurchaseService {
+        PurchaseResponse createPurchase(PurchaseRequest request, String userId);
+        CustomPagination<PurchaseResponse> getUserPurchases(String userId, int page, int size);
+        PurchaseResponse getPurchaseById(String purchaseId, String userId);
+    }
 }

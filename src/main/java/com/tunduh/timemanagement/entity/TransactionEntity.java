@@ -6,34 +6,28 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
-import java.util.Set;
 
 @Entity
 @Data
 @Builder
-@AllArgsConstructor
 @NoArgsConstructor
-@Table(name = "shop_items")
-public class ShopItemEntity {
+@AllArgsConstructor
+@Table(name = "transactions")
+public class TransactionEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
-    @Column(nullable = false)
-    private String name;
-
-    @Column(name = "item_picture")
-    private String itemPicture;
+    @ManyToOne
+    @JoinColumn(name = "user_id", nullable = false)
+    private UserEntity user;
 
     @Column(nullable = false)
-    private Integer price;
+    private Integer pointsChange;
 
     @Column(nullable = false)
-    private Integer stock;
-
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private ItemCategory category;
+    private TransactionType type;
 
     @Column(columnDefinition = "TEXT")
     private String description;
@@ -46,12 +40,7 @@ public class ShopItemEntity {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    @OneToMany(mappedBy = "shopItem")
-    private Set<TransactionEntity> transactions;
-
-    public enum ItemCategory {
-        AVATAR,
-        APP_THEME,
-        OTHER
+    public enum TransactionType {
+        PURCHASE, MISSION_COMPLETION, TASK_COMPLETION, ADMIN_ADJUSTMENT
     }
 }

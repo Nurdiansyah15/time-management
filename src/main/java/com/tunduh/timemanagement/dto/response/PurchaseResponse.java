@@ -1,16 +1,16 @@
 package com.tunduh.timemanagement.dto.response;
 
-import lombok.Builder;
 import lombok.Data;
 
 import java.time.LocalDateTime;
 
 @Data
-@Builder
 public class PurchaseResponse {
-    private String transactionId;
-    private String itemName;
-    private int quantity;
-    private int totalPrice;
-    private LocalDateTime purchaseDate;
+    private String id;
+    private String userId;
+    private String shopItemId;
+    private String shopItemName;
+    private Integer quantity;
+    private Integer totalPrice;
+    private LocalDateTime createdAt;
 }
