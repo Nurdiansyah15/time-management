@@ -7,6 +7,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.Set;
 
 @Entity
@@ -48,13 +49,19 @@ public class TaskEntity {
     private RepetitionType repetitionType;
 
     @Column(name = "repetition_start_date")
-    private LocalDate repetitionStartDate;
+    private LocalDateTime repetitionStartDate;
 
     @Column(name = "repetition_end_date")
-    private LocalDate repetitionEndDate;
+    private LocalDateTime repetitionEndDate;
 
     @Column(name = "repetition_interval")
     private Integer repetitionInterval;
+
+    @OneToMany(mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<TaskSessionEntity> sessions = new HashSet<>();
+
+    @Version
+    private Long version;
 
     @ManyToOne
     @JoinColumn(name = "user_id")

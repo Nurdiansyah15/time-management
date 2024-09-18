@@ -13,11 +13,12 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Repository
 public interface TaskRepository extends JpaRepository<TaskEntity, String>, JpaSpecificationExecutor<TaskEntity> {
     Page<TaskEntity> findByUserId(String userId, Pageable pageable);
-    TaskEntity findByIdAndUserId(String id, String userId);
+    Optional<TaskEntity> findByIdAndUserId(String id, String userId);
     long countByUserId(String userId);
     long countByUserIdAndStatus(String userId, String status);
 
@@ -75,4 +76,7 @@ public interface TaskRepository extends JpaRepository<TaskEntity, String>, JpaSp
     List<Map<String, Object>> getTaskDataByUserIdAndDateRange(@Param("userId") String userId,
                                                               @Param("startDate") LocalDateTime startDate,
                                                               @Param("endDate") LocalDateTime endDate);
+
+    Optional<TaskEntity> findByUserIdIn(List<String> collect);
+    List<TaskEntity> findAllRecurringTasks();
 }
