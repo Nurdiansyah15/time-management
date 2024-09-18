@@ -8,10 +8,6 @@ import org.springframework.web.multipart.MultipartFile;
 public interface CloudinaryService {
     String uploadFile(MultipartFile file, String folderName);
 
-    String updateFile(String url, MultipartFile newFile, String folderName);
-
-    void deleteImage(String url);
-
     interface PurchaseService {
         PurchaseResponse createPurchase(PurchaseRequest request, String userId);
         CustomPagination<PurchaseResponse> getUserPurchases(String userId, int page, int size);

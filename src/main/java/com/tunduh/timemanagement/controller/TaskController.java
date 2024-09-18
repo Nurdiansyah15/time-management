@@ -35,11 +35,13 @@ public class TaskController {
     @PostMapping
     @Operation(summary = "Create a new task")
     public ResponseEntity<?> createTask(@Valid @RequestBody TaskRequest taskRequest, Authentication authentication) {
-        UserEntity principal = (UserEntity) authentication.getPrincipal();
-        String userId = principal.getId();
-        TaskResponse createdTask = taskService.createTask(taskRequest, userId);
+        UserEntity user = (UserEntity) authentication.getPrincipal();
+        log.info("Creating new task for user: {}", user.getId());
+        TaskResponse createdTask = taskService.createTask(taskRequest, user.getId());
         return Response.renderJSON(createdTask, "Task created successfully!");
     }
+
+
 
     @PutMapping("/{id}/photos")
     @Operation(summary = "Update photo")
@@ -74,11 +76,11 @@ public class TaskController {
     }
 
     @PutMapping("/{id}")
-    @Operation(summary = "Update a task")
+    @Operation(summary = "Update an existing task")
     public ResponseEntity<?> updateTask(@PathVariable String id, @Valid @RequestBody TaskRequest taskRequest, Authentication authentication) {
-        UserEntity principal = (UserEntity) authentication.getPrincipal();
-        String userId = principal.getId();
-        TaskResponse updatedTask = taskService.updateTask(id, taskRequest, userId);
+        UserEntity user = (UserEntity) authentication.getPrincipal();
+        log.info("Updating task: {} for user: {}", id, user.getId());
+        TaskResponse updatedTask = taskService.updateTask(id, taskRequest, user.getId());
         return Response.renderJSON(updatedTask, "Task updated successfully!");
     }
 
