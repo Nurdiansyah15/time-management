@@ -1,5 +1,6 @@
 package com.tunduh.timemanagement.entity;
 
+import com.tunduh.timemanagement.validation.EnumValidator;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -43,6 +44,7 @@ public class TaskEntity {
     @Column(name = "day_of_week")
     private Set<Integer> repetitionDays;
 
+    @EnumValidator(enumClass = TaskEntity.RepetitionType.class, message = "Invalid repetition type")
     @Column(name = "repetition_type")
     @Enumerated(EnumType.STRING)
     private RepetitionType repetitionType;
@@ -59,7 +61,7 @@ public class TaskEntity {
     @OneToMany(mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<TaskSessionEntity> sessions = new HashSet<>();
 
-    @Version
+//    @Version
     private Long version;
 
     @ManyToOne
