@@ -20,8 +20,9 @@ public class MissionSeeder implements Seeder {
                     .description("Complete 5 tasks to earn bonus points")
                     .status(MissionEntity.MissionStatus.ACTIVE)
                     .pointReward(100)
-                    .requiredTaskCount(5)
-                    .requiredDuration(0)
+                    .criteriaCompleted(0)
+                    .criteriaValue(10)
+                    .type(MissionEntity.Type.TASK_BASED)
                     .startDate(LocalDateTime.now())
                     .endDate(LocalDateTime.now().plusDays(7))
                     .build();
@@ -32,8 +33,9 @@ public class MissionSeeder implements Seeder {
                     .description("Accumulate 2 hours of work time")
                     .status(MissionEntity.MissionStatus.ACTIVE)
                     .pointReward(150)
-                    .requiredTaskCount(0)
-                    .requiredDuration(120)
+                    .criteriaCompleted(0)
+                    .criteriaValue(10)
+                    .type(MissionEntity.Type.POINT_BASED)
                     .startDate(LocalDateTime.now())
                     .endDate(LocalDateTime.now().plusDays(7))
                     .build();

@@ -33,10 +33,14 @@ public class MissionEntity {
     private Integer pointReward;
 
     @Column(nullable = false)
-    private Integer requiredTaskCount;
+    private Integer criteriaValue;
 
     @Column(nullable = false)
-    private Integer requiredDuration;
+    private Integer criteriaCompleted;
+
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    private Type type;
 
     @Column(nullable = false)
     private LocalDateTime startDate;
@@ -59,5 +63,11 @@ public class MissionEntity {
 
     public enum MissionStatus {
         ACTIVE, INACTIVE, COMPLETED
+    }
+
+    public enum Type {
+        TIME_BASED,
+        TASK_BASED,
+        POINT_BASED
     }
 }

@@ -25,8 +25,9 @@ public class AdminMissionServiceImpl implements AdminMissionService {
                 .name(request.getName())
                 .description(request.getDescription())
                 .pointReward(request.getPointReward())
-                .requiredTaskCount(request.getRequiredTaskCount())
-                .requiredDuration(request.getRequiredDuration())
+                .criteriaValue(request.getCriteriaValue())
+                .criteriaCompleted(0)
+                .type(request.getType())
                 .startDate(request.getStartDate())
                 .endDate(request.getEndDate())
                 .status(MissionEntity.MissionStatus.ACTIVE)
@@ -45,8 +46,9 @@ public class AdminMissionServiceImpl implements AdminMissionService {
         mission.setName(request.getName());
         mission.setDescription(request.getDescription());
         mission.setPointReward(request.getPointReward());
-        mission.setRequiredTaskCount(request.getRequiredTaskCount());
-        mission.setRequiredDuration(request.getRequiredDuration());
+        mission.setCriteriaValue(request.getCriteriaValue());
+        mission.setCriteriaCompleted(0);
+        mission.setType(request.getType());
         mission.setStartDate(request.getStartDate());
         mission.setEndDate(request.getEndDate());
 
@@ -81,11 +83,12 @@ public class AdminMissionServiceImpl implements AdminMissionService {
                 .name(mission.getName())
                 .description(mission.getDescription())
                 .pointReward(mission.getPointReward())
-                .requiredTaskCount(mission.getRequiredTaskCount())
-                .requiredDuration(mission.getRequiredDuration())
+                .criteriaValue(mission.getCriteriaValue())
+                .criteriaCompleted(mission.getCriteriaCompleted())
+                .type(mission.getType())
                 .startDate(mission.getStartDate())
                 .endDate(mission.getEndDate())
-                .status(mission.getStatus().name())
+                .status(mission.getStatus())
                 .createdAt(mission.getCreatedAt())
                 .updatedAt(mission.getUpdatedAt())
                 .build();
