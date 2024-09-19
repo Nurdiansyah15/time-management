@@ -14,6 +14,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Set;
 
 @Entity
@@ -68,7 +69,7 @@ public class UserEntity implements UserDetails {
     private Set<TaskEntity> tasks;
 
     @ManyToMany(mappedBy = "users")
-    private Set<MissionEntity> missions;
+    private Set<MissionEntity> missions = new HashSet<>();
 
     @OneToMany(mappedBy = "user")
     private Set<TransactionEntity> transactions;
