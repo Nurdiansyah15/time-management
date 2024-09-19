@@ -5,12 +5,16 @@ import lombok.Data;
 
 @Data
 public class SubmissionRequest {
-    @NotBlank(message = "Title is required")
-    private String title;
+    @NotBlank(message = "Name is required")
+    private String name;
 
     @NotBlank(message = "Description is required")
     private String description;
 
-    @NotBlank(message = "Status is required")
-    private String status;
+    private Integer point;
+
+    private Integer criteriaCompleted;
+
+    @NotBlank(message = "Type is required")
+    private String type;
 }
