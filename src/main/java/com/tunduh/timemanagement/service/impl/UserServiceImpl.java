@@ -2,6 +2,7 @@ package com.tunduh.timemanagement.service.impl;
 
 import com.tunduh.timemanagement.dto.request.UserUpdateRequest;
 import com.tunduh.timemanagement.dto.response.UserResponse;
+import com.tunduh.timemanagement.entity.MissionEntity;
 import com.tunduh.timemanagement.entity.UserEntity;
 import com.tunduh.timemanagement.exception.ResourceNotFoundException;
 import com.tunduh.timemanagement.repository.MissionRepository;
@@ -35,9 +36,9 @@ public class UserServiceImpl implements UserService {
     @Cacheable(value = "user", key = "#userId")
     public UserResponse getCurrentUser(String userId) {
         UserEntity user = getUserById(userId);
-        long claimedMissions = missionRepository.countByUsersIdAndIsClaimed(userId, true);
-        long completedMissions = missionRepository.countByUsersIdAndStatus(userId, "COMPLETED");
-        long unclaimedRewards = missionRepository.countByUsersIdAndStatusAndIsRewardClaimedFalse(userId, "COMPLETED");
+        long claimedMissions = missionRepository.countByUserIdAndIsCompleted(userId, true);
+        long completedMissions = missionRepository.countByUserIdAndStatus(userId, MissionEntity.MissionStatus.COMPLETED);
+        long unclaimedRewards = missionRepository.countByUserIdAndStatusAndIsRewardClaimedFalse(userId, MissionEntity.MissionStatus.COMPLETED);
 
         return UserResponse.builder()
                 .id(user.getId())

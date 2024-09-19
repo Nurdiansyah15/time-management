@@ -13,19 +13,23 @@ import java.util.Map;
 
 @Repository
 public interface MissionRepository extends JpaRepository<MissionEntity, String>, JpaSpecificationExecutor<MissionEntity> {
-    long countByUsersIdAndStatus(String userId, String status);
 
-    long countByUsersIdAndIsClaimed(String userId, boolean isClaimed);
+    @Query("SELECT COUNT(um) FROM UserMissionEntity um WHERE um.user.id = :userId AND um.mission.status = :status")
+    long countByUserIdAndStatus(@Param("userId") String userId, @Param("status") MissionEntity.MissionStatus status);
 
-    long countByUsersIdAndStatusAndIsRewardClaimedFalse(String userId, String status);
+    @Query("SELECT COUNT(um) FROM UserMissionEntity um WHERE um.user.id = :userId AND um.isCompleted = :isCompleted")
+    long countByUserIdAndIsCompleted(@Param("userId") String userId, @Param("isCompleted") boolean isCompleted);
+
+    @Query("SELECT COUNT(um) FROM UserMissionEntity um WHERE um.user.id = :userId AND um.mission.status = :status AND um.isRewardClaimed = false")
+    long countByUserIdAndStatusAndIsRewardClaimedFalse(@Param("userId") String userId, @Param("status") MissionEntity.MissionStatus status);
 
     List<MissionEntity> findByStatus(MissionEntity.MissionStatus status);
 
     List<MissionEntity> findByStartDateBeforeAndEndDateAfter(LocalDateTime now, LocalDateTime now2);
 
-    @Query("SELECT new map(m.status as status, COUNT(m) as count) " +
-            "FROM MissionEntity m JOIN m.users u " +
-            "WHERE u.id = :userId " +
+    @Query("SELECT new map(m.status as status, COUNT(um) as count) " +
+            "FROM MissionEntity m JOIN m.userMissions um " +
+            "WHERE um.user.id = :userId " +
             "GROUP BY m.status")
     List<Map<String, Object>> getMissionDataByUserId(@Param("userId") String userId);
 }
