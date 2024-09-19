@@ -4,7 +4,6 @@ import com.tunduh.timemanagement.dto.request.PurchaseRequest;
 import com.tunduh.timemanagement.dto.response.PurchaseResponse;
 import com.tunduh.timemanagement.entity.PurchaseEntity;
 import com.tunduh.timemanagement.entity.ShopItemEntity;
-import com.tunduh.timemanagement.entity.TransactionEntity;
 import com.tunduh.timemanagement.entity.UserEntity;
 import com.tunduh.timemanagement.exception.InsufficientPointsException;
 import com.tunduh.timemanagement.exception.ResourceNotFoundException;
@@ -17,6 +16,8 @@ import com.tunduh.timemanagement.utils.pagination.CustomPagination;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -41,6 +42,10 @@ public class PurchaseServiceImpl implements PurchaseService {
             throw new InsufficientPointsException("User does not have enough points for this purchase");
         }
 
+        if (shopItem.getStock() < request.getQuantity()) {
+            throw new IllegalStateException("Not enough stock available");
+        }
+
         PurchaseEntity purchase = PurchaseEntity.builder()
                 .user(user)
                 .shopItem(shopItem)
@@ -54,8 +59,13 @@ public class PurchaseServiceImpl implements PurchaseService {
         user.setUserPoint(user.getUserPoint() - totalPrice);
         userRepository.save(user);
 
+        // Update shop item stock
+        shopItem.setStock(shopItem.getStock() - request.getQuantity());
+        shopItemRepository.save(shopItem);
+
         // Create transaction record
-        transactionService.createTransaction(userId, -totalPrice, TransactionEntity.TransactionType.PURCHASE,
+        transactionService.createTransaction(userId, -totalPrice,
+                com.tunduh.timemanagement.entity.TransactionEntity.TransactionType.PURCHASE,
                 "Purchase of " + request.getQuantity() + " " + shopItem.getName());
 
         return mapToPurchaseResponse(savedPurchase);
@@ -74,15 +84,27 @@ public class PurchaseServiceImpl implements PurchaseService {
         return mapToPurchaseResponse(purchase);
     }
 
+    @Override
+    public CustomPagination<PurchaseResponse> getAllPurchases(int page, int size, String sort) {
+        Sort.Direction direction = Sort.Direction.ASC;
+        if (sort.startsWith("-")) {
+            direction = Sort.Direction.DESC;
+            sort = sort.substring(1);
+        }
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sort));
+        Page<PurchaseEntity> purchasePage = purchaseRepository.findAll(pageable);
+        return new CustomPagination<>(purchasePage.map(this::mapToPurchaseResponse));
+    }
+
     private PurchaseResponse mapToPurchaseResponse(PurchaseEntity purchase) {
-        PurchaseResponse response = new PurchaseResponse();
-        response.setId(purchase.getId());
-        response.setUserId(purchase.getUser().getId());
-        response.setShopItemId(purchase.getShopItem().getId());
-        response.setShopItemName(purchase.getShopItem().getName());
-        response.setQuantity(purchase.getQuantity());
-        response.setTotalPrice(purchase.getTotalPrice());
-        response.setCreatedAt(purchase.getCreatedAt());
-        return response;
+        return PurchaseResponse.builder()
+                .id(purchase.getId())
+                .userId(purchase.getUser().getId())
+                .shopItemId(purchase.getShopItem().getId())
+                .shopItemName(purchase.getShopItem().getName())
+                .quantity(purchase.getQuantity())
+                .totalPrice(purchase.getTotalPrice())
+                .createdAt(purchase.getCreatedAt())
+                .build();
     }
 }

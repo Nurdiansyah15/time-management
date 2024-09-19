@@ -24,13 +24,10 @@ public class SubmissionEntity {
     private String description;
 
     @Column(nullable = false)
-    private Integer pointReward;
+    private Integer point;
 
     @Column(nullable = false)
-    private Integer requiredTaskCount;
-
-    @Column(nullable = false)
-    private Integer requiredDuration;
+    private Integer criteriaCompleted;
 
     @Enumerated(EnumType.STRING)
     private Type type;
