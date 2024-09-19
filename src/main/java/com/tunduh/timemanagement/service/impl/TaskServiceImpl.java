@@ -396,15 +396,11 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
-    @Cacheable(value = "tasks", key = "#userId")
     public CustomPagination<TaskResponse> getAllTasks(String userId, int page, int size, String sort, String title, String status) {
         Pageable pageable = createPageable(page, size, sort);
         Specification<TaskEntity> spec = TaskSpecification.getSpecification(title, status, userId);
 
         Page<TaskEntity> taskPage = taskRepository.findAll(spec, pageable);
-        List<TaskResponse> taskResponses = taskPage.getContent().stream()
-                .map(this::mapToTaskResponse)
-                .toList();
 
         return new CustomPagination<>(taskPage.map(this::mapToTaskResponse));
     }

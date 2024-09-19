@@ -60,7 +60,9 @@ public class TaskController {
             @Parameter(description = "Filter by status") @RequestParam(required = false) String status) {
         UserEntity principal = (UserEntity) authentication.getPrincipal();
         String userId = principal.getId();
+
         CustomPagination<TaskResponse> paginatedTasks = taskService.getAllTasks(userId, page, size, sort, title, status);
+
         return Response.renderJSON(paginatedTasks, "Successfully retrieved all tasks");
     }
 
