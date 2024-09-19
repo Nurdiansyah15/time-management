@@ -3,11 +3,12 @@ package com.tunduh.timemanagement.dto.response;
 import lombok.Builder;
 import lombok.Data;
 
+import java.io.Serializable;
 import java.util.Map;
 
 @Data
 @Builder
-public class UserAnalyticsResponse {
+public class UserAnalyticsResponse implements Serializable {
     private long totalTasks;
     private long completedTasks;
     private long pendingTasks;

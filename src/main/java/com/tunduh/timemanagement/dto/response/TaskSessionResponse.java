@@ -3,10 +3,11 @@ package com.tunduh.timemanagement.dto.response;
 import com.tunduh.timemanagement.entity.TaskSessionEntity;
 import lombok.Data;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 @Data
-public class TaskSessionResponse {
+public class TaskSessionResponse implements Serializable {
     private String id;
     private String taskId;
     private LocalDateTime startTime;

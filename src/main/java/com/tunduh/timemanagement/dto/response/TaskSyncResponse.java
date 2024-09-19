@@ -5,13 +5,14 @@ import lombok.Data;
 import lombok.Builder;
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class TaskSyncResponse {
+public class TaskSyncResponse implements Serializable {
     private String taskId;
     private String title;
     private Integer energy;
