@@ -1,19 +1,19 @@
 package com.tunduh.timemanagement.dto.request;
 
-import jakarta.validation.constraints.*;
 import lombok.Data;
+import jakarta.validation.constraints.*;
 import java.time.LocalDateTime;
 
 @Data
-public class MissionRequest {
+public class AdminMissionRequest {
     @NotBlank(message = "Mission name is required")
     private String name;
 
-    @NotBlank(message = "Mission description is required")
+    @NotBlank(message = "Description is required")
     private String description;
 
     @NotNull(message = "Point reward is required")
-    @Min(value = 0, message = "Point reward must be non-negative")
+    @Min(value = 1, message = "Point reward must be at least 1")
     private Integer pointReward;
 
     @NotNull(message = "Required task count is required")
@@ -24,17 +24,9 @@ public class MissionRequest {
     @Min(value = 0, message = "Required duration must be non-negative")
     private Integer requiredDuration;
 
-    @NotNull(message = "Is duration only flag is required")
-    private Boolean isDurationOnly;
-
-    @NotNull(message = "Is task only flag is required")
-    private Boolean isTaskOnly;
-
     @NotNull(message = "Start date is required")
-    @Future(message = "Start date must be in the future")
     private LocalDateTime startDate;
 
     @NotNull(message = "End date is required")
-    @Future(message = "End date must be in the future")
     private LocalDateTime endDate;
 }

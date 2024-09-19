@@ -1,19 +1,20 @@
 package com.tunduh.timemanagement.entity;
 
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import jakarta.persistence.*;
-import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import java.time.LocalDateTime;
-import java.util.Set;
-import java.util.HashSet;
 
 @Entity
-@Data
-@Builder
-@AllArgsConstructor
-@NoArgsConstructor
 @Table(name = "missions")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class MissionEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -22,17 +23,11 @@ public class MissionEntity {
     @Column(nullable = false)
     private String name;
 
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "TEXT")
     private String description;
 
     @Column(nullable = false)
-    private String status;
-
-    @Column(name = "point_reward", nullable = false)
     private Integer pointReward;
-
-    @Column(name = "mission_picture")
-    private String missionPicture;
 
     @Column(nullable = false)
     private Integer requiredTaskCount;
@@ -41,39 +36,22 @@ public class MissionEntity {
     private Integer requiredDuration;
 
     @Column(nullable = false)
-    private Boolean isDurationOnly;
-
-    @Column(nullable = false)
-    private Boolean isTaskOnly;
-
-    @Column(name = "start_date", nullable = false)
     private LocalDateTime startDate;
 
-    @Column(name = "end_date", nullable = false)
+    @Column(nullable = false)
     private LocalDateTime endDate;
 
-    @Column(name = "is_claimed", nullable = false)
-    private Boolean isClaimed = false;
-
-    @Column(name = "is_reward_claimed", nullable = false)
-    private Boolean isRewardClaimed = false;
-
-    @ManyToMany
-    @JoinTable(
-            name = "user_missions",
-            joinColumns = @JoinColumn(name = "mission_id"),
-            inverseJoinColumns = @JoinColumn(name = "user_id")
-    )
-    private Set<UserEntity> users = new HashSet<>();
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    private MissionStatus status;
 
     @CreationTimestamp
-    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
     @UpdateTimestamp
-    @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    @OneToMany(mappedBy = "mission", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<UserMissionEntity> userMissions = new HashSet<>();
+    public enum MissionStatus {
+        ACTIVE, INACTIVE, COMPLETED
+    }
 }
