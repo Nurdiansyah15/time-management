@@ -1,4 +1,4 @@
-package com.tunduh.timemanagement.service.impl;
+package com.tunduh.timemanagement.service;
 
 import com.tunduh.timemanagement.dto.response.TransactionResponse;
 import com.tunduh.timemanagement.entity.TransactionEntity;
@@ -6,7 +6,6 @@ import com.tunduh.timemanagement.entity.UserEntity;
 import com.tunduh.timemanagement.exception.ResourceNotFoundException;
 import com.tunduh.timemanagement.repository.TransactionRepository;
 import com.tunduh.timemanagement.repository.UserRepository;
-import com.tunduh.timemanagement.service.TransactionService;
 import com.tunduh.timemanagement.utils.pagination.CustomPagination;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -50,19 +49,19 @@ public class TransactionServiceImpl implements TransactionService {
 
     @Override
     public TransactionResponse getTransactionById(String transactionId, String userId) {
-        TransactionEntity transaction = (TransactionEntity) transactionRepository.findByIdAndUserId(transactionId, userId)
+        TransactionEntity transaction = transactionRepository.findByIdAndUserId(transactionId, userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Transaction not found"));
         return mapToTransactionResponse(transaction);
     }
 
     private TransactionResponse mapToTransactionResponse(TransactionEntity transaction) {
-        TransactionResponse response = new TransactionResponse();
-        response.setId(transaction.getId());
-        response.setUserId(transaction.getUser().getId());
-        response.setPointsChange(transaction.getPointsChange());
-        response.setType(transaction.getType());
-        response.setDescription(transaction.getDescription());
-        response.setCreatedAt(transaction.getCreatedAt());
-        return response;
+        return TransactionResponse.builder()
+                .id(transaction.getId())
+                .userId(transaction.getUser().getId())
+                .pointsChange(transaction.getPointsChange())
+                .type(transaction.getType())
+                .description(transaction.getDescription())
+                .createdAt(transaction.getCreatedAt())
+                .build();
     }
 }
