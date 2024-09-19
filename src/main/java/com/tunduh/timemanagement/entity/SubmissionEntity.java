@@ -19,16 +19,22 @@ public class SubmissionEntity {
     private String id;
 
     @Column(nullable = false)
-    private String title;
+    private String name;
 
     @Column(columnDefinition = "TEXT")
     private String description;
 
     @Column(nullable = false)
-    private String status;
+    private Integer point;
 
-    @Column(name = "submission_picture")
-    private String submissionPicture;
+    @Column(nullable = false)
+    private Integer criteriaCompleted;
+
+    @Enumerated(EnumType.STRING)
+    private Type type;
+
+    @Column(name = "icon")
+    private String icon;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -37,4 +43,10 @@ public class SubmissionEntity {
     @UpdateTimestamp
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    public enum Type {
+        TIME_BASED,
+        TASK_BASED,
+        POINT_BASED
+    }
 }

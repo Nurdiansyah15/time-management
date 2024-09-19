@@ -10,10 +10,12 @@ import java.time.LocalDateTime;
 @Builder
 public class SubmissionResponse implements Serializable {
     private String id;
-    private String title;
+    private String name;
     private String description;
-    private String status;
-    private String submissionPicture;
+    private Integer point;
+    private Integer criteriaCompleted;
+    private String type;
+    private String icon;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

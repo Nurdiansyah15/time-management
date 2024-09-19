@@ -48,10 +48,11 @@ public class AdminServiceImpl implements AdminService {
     @Transactional
     public SubmissionResponse createSubmission(SubmissionRequest submissionRequest) {
         SubmissionEntity submission = SubmissionEntity.builder()
-                .id(UUID.randomUUID().toString())
-                .title(submissionRequest.getTitle())
+                .name(submissionRequest.getName())
                 .description(submissionRequest.getDescription())
-                .status(submissionRequest.getStatus())
+                .point(submissionRequest.getPoint())
+                .criteriaCompleted(submissionRequest.getCriteriaCompleted())
+                .type(SubmissionEntity.Type.valueOf(submissionRequest.getType()))
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
                 .build();
@@ -66,7 +67,7 @@ public class AdminServiceImpl implements AdminService {
         SubmissionEntity submissionItem = submissionRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Submission item with id " + id + " not found"));
         String url = cloudinaryService.uploadFile(file, "submission");
-        submissionItem.setSubmissionPicture(url);
+        submissionItem.setIcon(url);
         SubmissionEntity savedSubmission = submissionRepository.save(submissionItem);
         return mapToSubmissionResponse(savedSubmission);
     }
@@ -97,12 +98,15 @@ public class AdminServiceImpl implements AdminService {
         SubmissionEntity submission = submissionRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Submission not found"));
 
-        submission.setTitle(submissionRequest.getTitle());
+        submission.setName(submissionRequest.getName());
         submission.setDescription(submissionRequest.getDescription());
-        submission.setStatus(submissionRequest.getStatus());
+        submission.setPoint(submissionRequest.getPoint());
+        submission.setCriteriaCompleted(submissionRequest.getCriteriaCompleted());
+        submission.setType(SubmissionEntity.Type.valueOf(submissionRequest.getType()));
         submission.setUpdatedAt(LocalDateTime.now());
 
         SubmissionEntity updatedSubmission = submissionRepository.save(submission);
+
         return mapToSubmissionResponse(updatedSubmission);
     }
 
@@ -136,14 +140,17 @@ public class AdminServiceImpl implements AdminService {
     private SubmissionResponse mapToSubmissionResponse(SubmissionEntity submission) {
         return SubmissionResponse.builder()
                 .id(submission.getId())
-                .title(submission.getTitle())
+                .name(submission.getName())
                 .description(submission.getDescription())
-                .status(submission.getStatus())
-                .submissionPicture(submission.getSubmissionPicture())
+                .point(submission.getPoint())
+                .criteriaCompleted(submission.getCriteriaCompleted())
+                .type(submission.getType().name())
+                .icon(submission.getIcon())
                 .createdAt(submission.getCreatedAt())
                 .updatedAt(submission.getUpdatedAt())
                 .build();
     }
+
 
     private ShopItemResponse mapToShopItemResponse(ShopItemEntity shopItem) {
         return ShopItemResponse.builder()
