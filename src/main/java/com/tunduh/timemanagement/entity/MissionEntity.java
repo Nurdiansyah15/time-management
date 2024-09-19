@@ -4,7 +4,6 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
-
 import java.time.LocalDateTime;
 import java.util.Set;
 import java.util.HashSet;
@@ -19,6 +18,10 @@ public class MissionEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
+
+    @ManyToOne
+    @JoinColumn(name = "submission_id", nullable = false)
+    private SubmissionEntity submission;
 
     @Column(nullable = false)
     private String name;
@@ -46,6 +49,15 @@ public class MissionEntity {
 
     @Column(nullable = false)
     private Boolean isTaskOnly;
+
+    @Column(name = "start_date", nullable = false)
+    private LocalDateTime startDate;
+
+    @Column(name = "end_date", nullable = false)
+    private LocalDateTime endDate;
+
+    @Column(name = "is_reward_claimed", nullable = false)
+    private Boolean isRewardClaimed = false;
 
     @ManyToMany
     @JoinTable(
