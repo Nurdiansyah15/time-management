@@ -2,6 +2,7 @@ package com.tunduh.timemanagement.service;
 
 import com.tunduh.timemanagement.dto.request.AdminMissionRequest;
 import com.tunduh.timemanagement.dto.response.AdminMissionResponse;
+import com.tunduh.timemanagement.utils.pagination.CustomPagination;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -10,5 +11,5 @@ public interface AdminMissionService {
     AdminMissionResponse updateMission(String id, AdminMissionRequest request);
     void deleteMission(String id);
     AdminMissionResponse getMissionById(String id);
-    Page<AdminMissionResponse> getAllMissions(Pageable pageable);
+    CustomPagination<AdminMissionResponse> getAllMissions(int page, int size, String sort);
 }
