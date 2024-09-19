@@ -6,7 +6,7 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
-
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -15,16 +15,16 @@ import java.util.Optional;
 public interface MissionRepository extends JpaRepository<MissionEntity, String>, JpaSpecificationExecutor<MissionEntity> {
     Optional<MissionEntity> findByIdAndUsersId(String id, String userId);
     long countByUsersIdAndStatus(String userId, String status);
-
-    @Query("SELECT new map(m.status as status, COUNT(m) as count) " +
-            "FROM MissionEntity m JOIN m.users u " +
-            "WHERE u.id = :userId " +
-            "GROUP BY m.status")
-    List<Map<String, Object>> getCompletedMissionsByUserId(@Param("userId") String userId);
+    List<MissionEntity> findByEndDateAfter(LocalDateTime now);
+    List<MissionEntity> findByUsersIdAndEndDateAfter(String userId, LocalDateTime now);
+    List<MissionEntity> findByEndDateBefore(LocalDateTime now);
+    List<MissionEntity> findByStatus(String status);
 
     @Query("SELECT new map(m.status as status, COUNT(m) as count) " +
             "FROM MissionEntity m JOIN m.users u " +
             "WHERE u.id = :userId " +
             "GROUP BY m.status")
     List<Map<String, Object>> getMissionDataByUserId(@Param("userId") String userId);
+
+    long countByUsersIdAndStatusAndIsRewardClaimedFalse(String userId, String status);
 }
