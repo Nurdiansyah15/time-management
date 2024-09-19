@@ -114,7 +114,14 @@ public class UserAnalyticsServiceImpl implements UserAnalyticsService {
                 .entrySet().stream()
                 .collect(Collectors.toMap(
                         Map.Entry::getKey,
-                        e -> (T) (valueField.equals("count") ? e.getValue().longValue() : e.getValue())
+                        e -> {
+                            Object value = e.getValue();
+                            if (valueField.equals("count")) {
+                                return (T) Long.valueOf(((Number) value).longValue());
+                            } else {
+                                return (T) value;
+                            }
+                        }
                 ));
     }
 
