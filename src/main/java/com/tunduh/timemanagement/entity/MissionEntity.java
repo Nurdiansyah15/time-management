@@ -19,10 +19,6 @@ public class MissionEntity {
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
-    @ManyToOne
-    @JoinColumn(name = "submission_id", nullable = false)
-    private SubmissionEntity submission;
-
     @Column(nullable = false)
     private String name;
 
@@ -56,11 +52,11 @@ public class MissionEntity {
     @Column(name = "end_date", nullable = false)
     private LocalDateTime endDate;
 
-    @Column(name = "is_reward_claimed", nullable = false)
-    private Boolean isRewardClaimed = false;
-    
     @Column(name = "is_claimed", nullable = false)
     private Boolean isClaimed = false;
+
+    @Column(name = "is_reward_claimed", nullable = false)
+    private Boolean isRewardClaimed = false;
 
     @ManyToMany
     @JoinTable(

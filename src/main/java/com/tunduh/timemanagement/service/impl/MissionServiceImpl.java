@@ -51,17 +51,14 @@ public class MissionServiceImpl implements MissionService {
     @CacheEvict(value = "missions", allEntries = true)
     public MissionResponse createMission(MissionRequest missionRequest) {
         log.info("Creating new mission: {}", missionRequest.getName());
-        SubmissionEntity submission = submissionRepository.findById(missionRequest.getSubmissionId())
-                .orElseThrow(() -> new ResourceNotFoundException("Submission not found"));
 
         MissionEntity mission = MissionEntity.builder()
-                .submission(submission)
                 .name(missionRequest.getName())
                 .description(missionRequest.getDescription())
                 .status("ACTIVE")
-                .pointReward(submission.getPointReward())
-                .requiredTaskCount(submission.getRequiredTaskCount())
-                .requiredDuration(submission.getRequiredDuration())
+                .pointReward(missionRequest.getPointReward())
+                .requiredTaskCount(missionRequest.getRequiredTaskCount())
+                .requiredDuration(missionRequest.getRequiredDuration())
                 .isDurationOnly(missionRequest.getIsDurationOnly())
                 .isTaskOnly(missionRequest.getIsTaskOnly())
                 .startDate(missionRequest.getStartDate())
