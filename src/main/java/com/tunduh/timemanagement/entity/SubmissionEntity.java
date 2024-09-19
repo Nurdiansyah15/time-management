@@ -4,7 +4,6 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
-
 import java.time.LocalDateTime;
 
 @Entity
@@ -25,10 +24,13 @@ public class SubmissionEntity {
     private String description;
 
     @Column(nullable = false)
-    private Integer point;
+    private Integer pointReward;
 
     @Column(nullable = false)
-    private Integer criteriaCompleted;
+    private Integer requiredTaskCount;
+
+    @Column(nullable = false)
+    private Integer requiredDuration;
 
     @Enumerated(EnumType.STRING)
     private Type type;
