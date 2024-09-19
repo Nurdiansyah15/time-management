@@ -1,10 +1,13 @@
 package com.tunduh.timemanagement.controller;
 
+import com.tunduh.timemanagement.dto.response.AdminMissionResponse;
 import com.tunduh.timemanagement.dto.response.UserMissionResponse;
 import com.tunduh.timemanagement.entity.UserEntity;
 import com.tunduh.timemanagement.service.UserMissionService;
+import com.tunduh.timemanagement.utils.pagination.CustomPagination;
 import com.tunduh.timemanagement.utils.response.Response;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +23,34 @@ import java.util.List;
 public class UserMissionController {
 
     private final UserMissionService userMissionService;
+
+    @GetMapping("/available")
+    @Operation(summary = "Get all available missions for the current user with pagination")
+    public ResponseEntity<?> getAvailableMissions(
+            Authentication authentication,
+            @Parameter(description = "Page number (0-based)") @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Page size") @RequestParam(defaultValue = "10") int size
+    ) {
+        UserEntity user = (UserEntity) authentication.getPrincipal();
+
+        CustomPagination<AdminMissionResponse> availableMissions = userMissionService.getAvailableMissions(user.getId(), page, size);
+
+        return Response.renderJSON(availableMissions, "Available missions retrieved successfully");
+    }
+
+    @GetMapping("/claimed")
+    @Operation(summary = "Get all claimed missions for the current user with pagination")
+    public ResponseEntity<?> getClaimedMissions(
+            Authentication authentication,
+            @Parameter(description = "Page number (0-based)") @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Page size") @RequestParam(defaultValue = "10") int size
+    ) {
+        UserEntity user = (UserEntity) authentication.getPrincipal();
+
+        CustomPagination<UserMissionResponse> claimedMissions = userMissionService.getClaimedMissions(user.getId(), page, size);
+
+        return Response.renderJSON(claimedMissions, "Claimed missions retrieved successfully");
+    }
 
     @GetMapping
     @Operation(summary = "Get all missions for the current user")

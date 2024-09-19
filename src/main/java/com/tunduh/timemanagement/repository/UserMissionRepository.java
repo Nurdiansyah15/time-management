@@ -1,6 +1,8 @@
 package com.tunduh.timemanagement.repository;
 
 import com.tunduh.timemanagement.entity.UserMissionEntity;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -16,11 +18,5 @@ public interface UserMissionRepository extends JpaRepository<UserMissionEntity, 
 
     List<UserMissionEntity> findByUserId(String userId);
 
-    List<UserMissionEntity> findByMissionId(String missionId);
-
-    long countByUserIdAndIsCompleted(String userId, boolean isCompleted);
-
-    long countByUserIdAndIsRewardClaimed(String userId, boolean isRewardClaimed);
-
-    List<UserMissionEntity> findByUserIdAndIsCompletedAndIsRewardClaimedFalse(String userId, boolean isCompleted);
+    Page<UserMissionEntity> findByUserIdAndIsCompleted(String userId, boolean b, Pageable pageable);
 }

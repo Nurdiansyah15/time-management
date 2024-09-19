@@ -12,5 +12,4 @@ public interface AdminMissionService {
     void deleteMission(String id);
     AdminMissionResponse getMissionById(String id);
     CustomPagination<AdminMissionResponse> getAllMissions(int page, int size, String sort);
-    void assignMissionToAllUsers(String missionId);
 }
