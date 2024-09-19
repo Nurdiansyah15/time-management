@@ -38,7 +38,7 @@ public class UserAnalyticsServiceImpl implements UserAnalyticsService {
                 .pendingTasks(taskRepository.countByUserIdAndStatus(userId, PENDING_STATUS))
                 .completedMissions(missionRepository.countByUserIdAndIsCompleted(userId, true))
                 .claimedMissions(missionRepository.countByUserIdAndIsCompleted(userId, true))
-                .totalPointsChange(transactionRepository.sumPointsChangeByUserId(userId))
+                .totalPointsChange((transactionRepository.sumPointsChangeByUserId(userId).orElse(0.00)))
                 .unclaimedMissionRewards(missionRepository.countByUserIdAndStatusAndIsRewardClaimedFalse(userId, MissionEntity.MissionStatus.COMPLETED))
                 .build();
     }

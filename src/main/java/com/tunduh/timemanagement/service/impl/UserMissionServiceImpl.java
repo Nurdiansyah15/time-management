@@ -1,5 +1,6 @@
 package com.tunduh.timemanagement.service.impl;
 
+import com.tunduh.timemanagement.dto.response.AdminMissionResponse;
 import com.tunduh.timemanagement.dto.response.UserMissionResponse;
 import com.tunduh.timemanagement.entity.MissionEntity;
 import com.tunduh.timemanagement.entity.UserEntity;
@@ -8,8 +9,13 @@ import com.tunduh.timemanagement.exception.ResourceNotFoundException;
 import com.tunduh.timemanagement.repository.MissionRepository;
 import com.tunduh.timemanagement.repository.UserMissionRepository;
 import com.tunduh.timemanagement.repository.UserRepository;
+import com.tunduh.timemanagement.service.MissionCompletionChecker;
 import com.tunduh.timemanagement.service.UserMissionService;
+import com.tunduh.timemanagement.utils.pagination.CustomPagination;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,13 +30,39 @@ public class UserMissionServiceImpl implements UserMissionService {
     private final UserMissionRepository userMissionRepository;
     private final UserRepository userRepository;
     private final MissionRepository missionRepository;
+    private final MissionCompletionChecker missionCompletionChecker;
 
     @Override
-    public List<UserMissionResponse> getUserMissions(String userId) {
-        List<UserMissionEntity> userMissions = userMissionRepository.findByUserId(userId);
-        return userMissions.stream()
-                .map(this::mapToUserMissionResponse)
+    public CustomPagination<AdminMissionResponse> getAvailableMissions(String userId, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+
+        // Fetch all missions (paginated)
+        Page<MissionEntity> allMissionsPage = missionRepository.findAll(pageable);
+
+        // Filter out claimed missions within the stream
+        List<AdminMissionResponse> availableMissions = allMissionsPage.stream()
+                .filter(mission -> !userMissionRepository.existsByMissionIdAndUserId(mission.getId(), userId))
+                .map(this::mapToAdminMissionResponse)
                 .collect(Collectors.toList());
+
+        // Construct a CustomPagination object with filtered content and original pagination details
+        return new CustomPagination<>(
+                availableMissions,
+                allMissionsPage.getTotalElements(),
+                allMissionsPage.getNumber(),
+                allMissionsPage.getSize()
+        );
+    }
+
+    @Override
+    public CustomPagination<UserMissionResponse> getClaimedMissions(String userId, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+
+        Page<UserMissionEntity> claimedMissionsPage = userMissionRepository.findByUserIdAndIsCompleted(userId, false, pageable);
+
+        missionCompletionChecker.checkAllMissionsForUser(userId);
+
+        return new CustomPagination<>(claimedMissionsPage.map(this::mapToUserMissionResponse));
     }
 
     @Override
@@ -73,6 +105,7 @@ public class UserMissionServiceImpl implements UserMissionService {
 
         userMission.setIsCompleted(true);
         userMission.setCompletedAt(LocalDateTime.now());
+
         UserMissionEntity updatedUserMission = userMissionRepository.save(userMission);
         return mapToUserMissionResponse(updatedUserMission);
     }
@@ -101,6 +134,21 @@ public class UserMissionServiceImpl implements UserMissionService {
         userRepository.save(user);
 
         return mapToUserMissionResponse(updatedUserMission);
+    }
+
+
+
+    private AdminMissionResponse mapToAdminMissionResponse(MissionEntity mission) {
+       return AdminMissionResponse.builder()
+               .id(mission.getId())
+               .name(mission.getName())
+               .description(mission.getDescription())
+               .criteriaValue(mission.getCriteriaValue())
+               .pointReward(mission.getPointReward())
+               .type(mission.getType())
+               .createdAt(mission.getCreatedAt())
+               .updatedAt(mission.getUpdatedAt())
+               .build();
     }
 
     private UserMissionResponse mapToUserMissionResponse(UserMissionEntity userMission) {

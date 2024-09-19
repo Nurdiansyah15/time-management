@@ -3,8 +3,10 @@ package com.tunduh.timemanagement.controller;
 import com.tunduh.timemanagement.dto.request.AdminMissionRequest;
 import com.tunduh.timemanagement.dto.response.AdminMissionResponse;
 import com.tunduh.timemanagement.service.AdminMissionService;
+import com.tunduh.timemanagement.utils.pagination.CustomPagination;
 import com.tunduh.timemanagement.utils.response.Response;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -53,8 +55,13 @@ public class AdminMissionController {
 
     @GetMapping
     @Operation(summary = "Get all missions")
-    public ResponseEntity<?> getAllMissions(Pageable pageable) {
-        Page<AdminMissionResponse> missions = adminMissionService.getAllMissions(pageable);
+    public ResponseEntity<?> getAllMissions(
+            @Parameter(description = "Page number (0-based)") @RequestParam(defaultValue = "0") int page,
+                                             @Parameter(description = "Page size") @RequestParam(defaultValue = "10") int size,
+                                             @Parameter(description = "Sort parameter (e.g., 'title,asc' or 'createdAt,desc')") @RequestParam(required = false) String sort
+    ) {
+        CustomPagination<AdminMissionResponse> missions = adminMissionService.getAllMissions(page,size,sort);
+
         return Response.renderJSON(missions);
     }
 }

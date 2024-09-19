@@ -1,6 +1,8 @@
 package com.tunduh.timemanagement.repository;
 
 import com.tunduh.timemanagement.entity.MissionEntity;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
@@ -32,4 +34,6 @@ public interface MissionRepository extends JpaRepository<MissionEntity, String>,
             "WHERE um.user.id = :userId " +
             "GROUP BY m.status")
     List<Map<String, Object>> getMissionDataByUserId(@Param("userId") String userId);
+
+    Page<MissionEntity> findAll(Pageable pageable);
 }

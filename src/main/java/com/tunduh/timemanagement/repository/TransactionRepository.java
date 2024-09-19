@@ -18,7 +18,7 @@ public interface TransactionRepository extends JpaRepository<TransactionEntity, 
     Page<TransactionEntity> findByUserId(String userId, Pageable pageable);
 
     @Query("SELECT SUM(t.pointsChange) FROM TransactionEntity t WHERE t.user.id = :userId")
-    Double sumPointsChangeByUserId(@Param("userId") String userId);
+    Optional<Double> sumPointsChangeByUserId(@Param("userId") String userId);
 
     @Query("SELECT new map(t.type as category, SUM(t.pointsChange) as totalChange) " +
             "FROM TransactionEntity t " +
