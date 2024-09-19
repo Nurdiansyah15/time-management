@@ -24,6 +24,11 @@ public class MissionSeeder implements Seeder {
                     .requiredDuration(0)
                     .isDurationOnly(false)
                     .isTaskOnly(true)
+                    .isRewardClaimed(false)
+                    .isClaimed(false)
+                    .missionPicture("")
+                    .startDate(LocalDateTime.now())
+                    .endDate(LocalDateTime.now())
                     .createdAt(LocalDateTime.now())
                     .updatedAt(LocalDateTime.now())
                     .build();
@@ -38,6 +43,11 @@ public class MissionSeeder implements Seeder {
                     .requiredDuration(120)
                     .isDurationOnly(true)
                     .isTaskOnly(false)
+                    .isClaimed(false)
+                    .isRewardClaimed(false)
+                    .missionPicture("")
+                    .startDate(LocalDateTime.now())
+                    .endDate(LocalDateTime.now())
                     .createdAt(LocalDateTime.now())
                     .updatedAt(LocalDateTime.now())
                     .build();

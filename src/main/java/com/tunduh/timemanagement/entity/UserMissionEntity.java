@@ -17,21 +17,26 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @Table(name = "user_missions")
 public class UserMissionEntity {
-    @Column(nullable = false)
-    private final Boolean isCompleted = false;
-    @Column(nullable = false)
-    private final Boolean isRewardClaimed = false;
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
+
     @ManyToOne
     @JoinColumn(name = "user_id")
     private UserEntity user;
+
     @ManyToOne
     @JoinColumn(name = "mission_id")
     private MissionEntity mission;
+
     @Column(name = "completed_at")
     private LocalDateTime completedAt;
+
+    @Column(nullable = false)
+    private Boolean isCompleted = false;
+
+    @Column(nullable = false)
+    private Boolean isRewardClaimed = false;
 
     @Column(name = "reward_claimed_at")
     private LocalDateTime rewardClaimedAt;

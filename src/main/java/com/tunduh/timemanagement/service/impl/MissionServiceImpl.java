@@ -6,8 +6,8 @@ import com.tunduh.timemanagement.dto.response.MissionResponse;
 import com.tunduh.timemanagement.entity.*;
 import com.tunduh.timemanagement.exception.ResourceNotFoundException;
 import com.tunduh.timemanagement.repository.MissionRepository;
-import com.tunduh.timemanagement.repository.SubmissionRepository;
 import com.tunduh.timemanagement.repository.TaskRepository;
+import com.tunduh.timemanagement.repository.UserMissionRepository;
 import com.tunduh.timemanagement.repository.UserRepository;
 import com.tunduh.timemanagement.service.CloudinaryService;
 import com.tunduh.timemanagement.service.MissionService;
@@ -36,12 +36,11 @@ import java.util.stream.Collectors;
 @Slf4j
 public class MissionServiceImpl implements MissionService {
     private final MissionRepository missionRepository;
-    private final SubmissionRepository submissionRepository;
     private final UserRepository userRepository;
     private final TaskRepository taskRepository;
     private final TransactionService transactionService;
     private final CloudinaryService cloudinaryService;
-    private final UserMissionEntity userMission;
+    private final UserMissionRepository userMissionRepository;
 
     @Override
     @Transactional
@@ -150,65 +149,6 @@ public class MissionServiceImpl implements MissionService {
                 .orElseThrow(() -> new ResourceNotFoundException("Mission not found"));
         missionRepository.delete(mission);
         log.debug("Mission deleted with ID: {}", id);
-    }
-
-    @Override
-    @Transactional
-    public MissionResponse claimMission(String id, String userId) {
-        log.info("User {} claiming mission {}", userId, id);
-        MissionEntity mission = missionRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Mission not found"));
-        UserEntity user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-
-        if (mission.getIsClaimed()) {
-            throw new IllegalStateException("Mission already claimed");
-        }
-
-        if (mission.getStartDate().isAfter(LocalDateTime.now())) {
-            throw new IllegalStateException("Mission has not started yet");
-        }
-
-        if (mission.getEndDate().isBefore(LocalDateTime.now())) {
-            throw new IllegalStateException("Mission has already ended");
-        }
-
-        mission.getUsers().add(user);
-        mission.setIsClaimed(true);
-        MissionEntity updatedMission = missionRepository.save(mission);
-
-        log.debug("Mission {} claimed by user {}", id, userId);
-        return mapToMissionResponse(updatedMission);
-    }
-
-    @Override
-    @Transactional
-    public MissionResponse claimMissionReward(String id, String userId) {
-        log.info("User {} claiming reward for mission {}", userId, id);
-        MissionEntity mission = missionRepository.findByIdAndUsersId(id, userId)
-                .orElseThrow(() -> new ResourceNotFoundException("Mission not found or not claimed by user"));
-
-        if (!"COMPLETED".equals(mission.getStatus())) {
-            throw new IllegalStateException("Mission is not completed");
-        }
-
-        if (mission.getIsRewardClaimed()) {
-            throw new IllegalStateException("Reward already claimed");
-        }
-
-        if (!checkMissionCompletion(mission, userId)) {
-            throw new IllegalStateException("Mission requirements not met");
-        }
-
-        mission.setIsRewardClaimed(true);
-        missionRepository.save(mission);
-
-        transactionService.createTransaction(userId, mission.getPointReward(),
-                TransactionEntity.TransactionType.MISSION_COMPLETION,
-                "Completed mission: " + mission.getName());
-
-        log.debug("Reward claimed for mission {} by user {}", id, userId);
-        return mapToMissionResponse(mission);
     }
 
     @Override

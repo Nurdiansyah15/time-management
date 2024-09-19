@@ -20,4 +20,5 @@ public interface MissionService {
     void checkAndUpdateMissions();
     List<MissionResponse> getAvailableMissionsForUser(String userId);
     MissionProgressResponse getMissionProgress(String missionId, String userId);
+    MissionResponse completeMission(String missionId, String userId);
 }
