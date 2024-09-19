@@ -1,6 +1,7 @@
 package com.tunduh.timemanagement.service.impl;
 
 import com.tunduh.timemanagement.dto.request.MissionRequest;
+import com.tunduh.timemanagement.dto.response.MissionProgressResponse;
 import com.tunduh.timemanagement.dto.response.MissionResponse;
 import com.tunduh.timemanagement.entity.MissionEntity;
 import com.tunduh.timemanagement.entity.SubmissionEntity;
@@ -32,6 +33,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -216,6 +218,16 @@ public class MissionServiceImpl implements MissionService {
     }
 
     @Override
+    public List<MissionResponse> getAvailableMissionsForUser(String userId) {
+        log.info("Fetching available missions for user: {}", userId);
+        LocalDateTime now = LocalDateTime.now();
+        List<MissionEntity> availableMissions = missionRepository.findAvailableMissionsForUser(userId, now);
+        return availableMissions.stream()
+                .map(this::mapToMissionResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Override
     @Scheduled(fixedRate = 60000) // Run every minute
     @Transactional
     public void checkAndUpdateMissions() {
@@ -266,6 +278,45 @@ public class MissionServiceImpl implements MissionService {
         } else {
             return completedTaskCount >= mission.getRequiredTaskCount() && totalDuration >= mission.getRequiredDuration();
         }
+    }
+    @Override
+    public MissionProgressResponse getMissionProgress(String missionId, String userId) {
+        log.info("Fetching progress for mission: {} and user: {}", missionId, userId);
+        MissionEntity mission = missionRepository.findByIdAndUsersId(missionId, userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Mission not found or not claimed by user"));
+
+        List<TaskEntity> userTasks = taskRepository.findByUserIdAndCreatedAtBetween(
+                userId, mission.getStartDate(), LocalDateTime.now());
+
+        int completedTasks = (int) userTasks.stream()
+                .filter(task -> "COMPLETED".equals(task.getStatus()))
+                .count();
+
+        long completedDuration = userTasks.stream()
+                .filter(task -> "COMPLETED".equals(task.getStatus()))
+                .mapToLong(TaskEntity::getDuration)
+                .sum();
+
+        double progressPercentage;
+        if (mission.getIsDurationOnly()) {
+            progressPercentage = (double) completedDuration / mission.getRequiredDuration() * 100;
+        } else if (mission.getIsTaskOnly()) {
+            progressPercentage = (double) completedTasks / mission.getRequiredTaskCount() * 100;
+        } else {
+            double taskProgress = (double) completedTasks / mission.getRequiredTaskCount();
+            double durationProgress = (double) completedDuration / mission.getRequiredDuration();
+            progressPercentage = (taskProgress + durationProgress) / 2 * 100;
+        }
+
+        return MissionProgressResponse.builder()
+                .missionId(mission.getId())
+                .missionName(mission.getName())
+                .completedTasks(completedTasks)
+                .totalRequiredTasks(mission.getRequiredTaskCount())
+                .completedDuration(completedDuration)
+                .totalRequiredDuration(mission.getRequiredDuration())
+                .progressPercentage(Math.min(progressPercentage, 100))
+                .build();
     }
 
     private MissionResponse mapToMissionResponse(MissionEntity mission) {

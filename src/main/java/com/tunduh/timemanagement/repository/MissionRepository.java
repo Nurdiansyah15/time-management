@@ -26,6 +26,9 @@ public interface MissionRepository extends JpaRepository<MissionEntity, String>,
             "GROUP BY m.status")
     List<Map<String, Object>> getMissionDataByUserId(@Param("userId") String userId);
 
+    @Query("SELECT m FROM MissionEntity m WHERE m.startDate <= :now AND m.endDate >= :now AND m.status = 'ACTIVE' AND m NOT IN (SELECT um.mission FROM UserMissionEntity um WHERE um.user.id = :userId)")
+    List<MissionEntity> findAvailableMissionsForUser(@Param("userId") String userId, @Param("now") LocalDateTime now);
+
     long countByUsersIdAndStatusAndIsRewardClaimedFalse(String userId, String status);
     long countByUsersIdAndIsClaimed(String userId, boolean isClaimed);
 }

@@ -1,9 +1,12 @@
 package com.tunduh.timemanagement.service;
 
 import com.tunduh.timemanagement.dto.request.MissionRequest;
+import com.tunduh.timemanagement.dto.response.MissionProgressResponse;
 import com.tunduh.timemanagement.dto.response.MissionResponse;
 import com.tunduh.timemanagement.utils.pagination.CustomPagination;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 public interface MissionService {
     MissionResponse createMission(MissionRequest missionRequest);
@@ -15,4 +18,6 @@ public interface MissionService {
     MissionResponse claimMission(String id, String userId);
     MissionResponse claimMissionReward(String id, String userId);
     void checkAndUpdateMissions();
+    List<MissionResponse> getAvailableMissionsForUser(String userId);
+    MissionProgressResponse getMissionProgress(String missionId, String userId);
 }

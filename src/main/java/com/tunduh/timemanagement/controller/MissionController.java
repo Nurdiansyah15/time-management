@@ -2,6 +2,7 @@ package com.tunduh.timemanagement.controller;
 
 import com.tunduh.timemanagement.dto.request.MissionClaimRequest;
 import com.tunduh.timemanagement.dto.request.MissionRequest;
+import com.tunduh.timemanagement.dto.response.MissionProgressResponse;
 import com.tunduh.timemanagement.dto.response.MissionResponse;
 import com.tunduh.timemanagement.entity.UserEntity;
 import com.tunduh.timemanagement.service.MissionService;
@@ -17,6 +18,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/missions")
@@ -89,16 +92,6 @@ public class MissionController {
         return Response.renderJSON(null, "Mission deleted successfully!");
     }
 
-    @PostMapping("/{missionId}/assign/{userId}")
-    @PreAuthorize("hasRole('ADMIN')")
-    @Operation(summary = "Assign a mission to a user")
-    public ResponseEntity<?> assignMissionToUser(@PathVariable String missionId, @PathVariable String userId) {
-        log.info("Received request to assign mission with ID: {} to user with ID: {}", missionId, userId);
-        MissionResponse assignedMission = missionService.assignMissionToUser(missionId, userId);
-        log.debug("Mission with ID: {} assigned to user with ID: {}", missionId, userId);
-        return Response.renderJSON(assignedMission, "Mission assigned to user successfully!");
-    }
-
     @PostMapping("/{id}/claim")
     @Operation(summary = "Claim a mission")
     public ResponseEntity<?> claimMission(@PathVariable String id, Authentication authentication) {
@@ -137,5 +130,23 @@ public class MissionController {
         MissionResponse missionReward = missionService.claimMissionReward(request.getMissionId(), user.getId());
         log.debug("Reward for mission with ID: {} claimed by user: {}", request.getMissionId(), user.getId());
         return Response.renderJSON(missionReward, "Mission reward claimed successfully!");
+    }
+
+    @GetMapping("/{id}/progress")
+    @Operation(summary = "Get progress for a specific mission")
+    public ResponseEntity<?> getMissionProgress(@PathVariable String id, Authentication authentication) {
+        UserEntity user = (UserEntity) authentication.getPrincipal();
+        log.info("Fetching progress for mission: {} and user: {}", id, user.getId());
+        MissionProgressResponse progress = missionService.getMissionProgress(id, user.getId());
+        return Response.renderJSON(progress, "Mission progress retrieved successfully");
+    }
+
+    @GetMapping("/available")
+    @Operation(summary = "Get available missions for the current user")
+    public ResponseEntity<?> getAvailableMissions(Authentication authentication) {
+        UserEntity user = (UserEntity) authentication.getPrincipal();
+        log.info("Fetching available missions for user: {}", user.getId());
+        List<MissionResponse> availableMissions = missionService.getAvailableMissionsForUser(user.getId());
+        return Response.renderJSON(availableMissions, "Available missions retrieved successfully");
     }
 }
