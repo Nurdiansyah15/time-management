@@ -4,7 +4,6 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
-
 import java.time.LocalDateTime;
 
 @Entity
@@ -41,6 +40,6 @@ public class TransactionEntity {
     private LocalDateTime updatedAt;
 
     public enum TransactionType {
-        PURCHASE, MISSION_COMPLETION, TASK_COMPLETION, ADMIN_ADJUSTMENT
+        MISSION_COMPLETION, PURCHASE, ADMIN_ADJUSTMENT
     }
 }
