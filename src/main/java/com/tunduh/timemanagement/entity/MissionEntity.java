@@ -1,12 +1,13 @@
 package com.tunduh.timemanagement.entity;
 
+import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
@@ -47,19 +48,14 @@ public class MissionEntity {
     @Enumerated(EnumType.STRING)
     private MissionStatus status;
 
+    @OneToMany(mappedBy = "mission", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<UserMissionEntity> userMissions = new HashSet<>();
+
     @CreationTimestamp
     private LocalDateTime createdAt;
 
     @UpdateTimestamp
     private LocalDateTime updatedAt;
-
-    @ManyToMany
-    @JoinTable(
-            name = "user_missions",
-            joinColumns = @JoinColumn(name = "mission_id"),
-            inverseJoinColumns = @JoinColumn(name = "user_id")
-    )
-    private Set<UserEntity> users = new HashSet<>();
 
     public enum MissionStatus {
         ACTIVE, INACTIVE, COMPLETED

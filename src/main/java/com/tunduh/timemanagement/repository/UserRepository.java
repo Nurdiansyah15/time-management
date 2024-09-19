@@ -20,8 +20,8 @@ public interface UserRepository extends JpaRepository<UserEntity, String>, JpaSp
     @Query("SELECT COUNT(u) FROM UserEntity u WHERE u.lastLoginDate >= :thirtyDaysAgo")
     long countActiveUsers(LocalDate thirtyDaysAgo);
 
-    @Query("SELECT AVG(SIZE(u.tasks)) FROM UserEntity u")
-    double getAverageTasksPerUser();
+//    @Query("SELECT AVG(SIZE(u.tasks)) FROM UserEntity u")
+//    double getAverageTasksPerUser();
 
     List<UserEntity> findByResetTimeLessThanEqualAndLastResetDateBefore(LocalTime now, LocalDate today);
 }

@@ -11,5 +11,5 @@ import org.springframework.web.multipart.MultipartFile;
 public interface AdminService {
     CustomPagination<ShopItemResponse> getAllShopItems(int page, int size, String sort, String name, Integer maxPrice);
     CustomPagination<PurchaseResponse> getAllPurchases(int page, int size, String sort);
-    AnalyticsResponse getUserAnalytics();
+//    AnalyticsResponse getUserAnalytics();
 }

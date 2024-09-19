@@ -32,13 +32,13 @@ public class AdminServiceImpl implements AdminService {
         return purchaseService.getAllPurchases(page, size, sort);
     }
 
-    @Override
-    public AnalyticsResponse getUserAnalytics() {
-        LocalDate thirtyDaysAgo = LocalDate.now().minusDays(30);
-        return AnalyticsResponse.builder()
-                .totalUsers(userRepository.count())
-                .activeUsers(userRepository.countActiveUsers(thirtyDaysAgo))
-                .averageTasksPerUser(userRepository.getAverageTasksPerUser())
-                .build();
-    }
+//    @Override
+//    public AnalyticsResponse getUserAnalytics() {
+//        LocalDate thirtyDaysAgo = LocalDate.now().minusDays(30);
+//        return AnalyticsResponse.builder()
+//                .totalUsers(userRepository.count())
+//                .activeUsers(userRepository.countActiveUsers(thirtyDaysAgo))
+//                .averageTasksPerUser(userRepository.getAverageTasksPerUser())
+//                .build();
+//    }
 }

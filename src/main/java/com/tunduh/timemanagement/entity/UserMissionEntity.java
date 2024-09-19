@@ -1,36 +1,33 @@
 package com.tunduh.timemanagement.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 
 @Entity
-@Data
-@Builder
-@AllArgsConstructor
-@NoArgsConstructor
 @Table(name = "user_missions")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class UserMissionEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
     private UserEntity user;
 
-    @ManyToOne
-    @JoinColumn(name = "mission_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "mission_id", nullable = false)
     private MissionEntity mission;
-
-    @Column(name = "completed_at")
-    private LocalDateTime completedAt;
 
     @Column(nullable = false)
     private Boolean isCompleted = false;
@@ -38,14 +35,13 @@ public class UserMissionEntity {
     @Column(nullable = false)
     private Boolean isRewardClaimed = false;
 
-    @Column(name = "reward_claimed_at")
+    private LocalDateTime completedAt;
+
     private LocalDateTime rewardClaimedAt;
 
     @CreationTimestamp
-    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
     @UpdateTimestamp
-    @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 }

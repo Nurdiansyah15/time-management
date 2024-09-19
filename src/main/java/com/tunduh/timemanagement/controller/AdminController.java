@@ -29,12 +29,12 @@ public class AdminController {
 
     private final AdminService adminService;
 
-    @GetMapping("/analytics/users")
-    @Operation(summary = "Get user analytics")
-    public ResponseEntity<?> getUserAnalytics() {
-        AnalyticsResponse analytics = adminService.getUserAnalytics();
-        return Response.renderJSON(analytics);
-    }
+//    @GetMapping("/analytics/users")
+//    @Operation(summary = "Get user analytics")
+//    public ResponseEntity<?> getUserAnalytics() {
+//        AnalyticsResponse analytics = adminService.getUserAnalytics();
+//        return Response.renderJSON(analytics);
+//    }
 
     @GetMapping("/shop")
     @Operation(summary = "Get all shop items with pagination and filtering")
