@@ -3,8 +3,12 @@ package com.tunduh.timemanagement.service.impl;
 import com.tunduh.timemanagement.dto.request.AdminMissionRequest;
 import com.tunduh.timemanagement.dto.response.AdminMissionResponse;
 import com.tunduh.timemanagement.entity.MissionEntity;
+import com.tunduh.timemanagement.entity.UserEntity;
+import com.tunduh.timemanagement.entity.UserMissionEntity;
 import com.tunduh.timemanagement.exception.ResourceNotFoundException;
 import com.tunduh.timemanagement.repository.MissionRepository;
+import com.tunduh.timemanagement.repository.UserMissionRepository;
+import com.tunduh.timemanagement.repository.UserRepository;
 import com.tunduh.timemanagement.service.AdminMissionService;
 import com.tunduh.timemanagement.utils.pagination.CustomPagination;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +27,32 @@ import java.util.List;
 public class AdminMissionServiceImpl implements AdminMissionService {
 
     private final MissionRepository missionRepository;
+    private final UserRepository userRepository;
+    private final UserMissionRepository userMissionRepository;
+
+    @Override
+    @jakarta.transaction.Transactional
+    public void assignMissionToAllUsers(String missionId) {
+        MissionEntity mission = missionRepository.findById(missionId)
+                .orElseThrow(() -> new ResourceNotFoundException("Mission not found"));
+
+        List<UserEntity> allUsers = userRepository.findAll();
+
+        for (UserEntity user : allUsers) {
+
+            if (!userMissionRepository.existsByMissionIdAndUserId(missionId, user.getId())) {
+                UserMissionEntity userMission = UserMissionEntity.builder()
+                        .user(user)
+                        .mission(mission)
+                        .isCompleted(false)
+                        .isRewardClaimed(false)
+                        .build();
+
+                userMissionRepository.save(userMission);
+            }
+
+        }
+    }
 
     @Override
     @Transactional
@@ -40,6 +70,9 @@ public class AdminMissionServiceImpl implements AdminMissionService {
                 .build();
 
         MissionEntity savedMission = missionRepository.save(mission);
+
+        this.assignMissionToAllUsers(savedMission.getId());
+
         return mapToAdminMissionResponse(savedMission);
     }
 
