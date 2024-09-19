@@ -27,4 +27,5 @@ public interface MissionRepository extends JpaRepository<MissionEntity, String>,
     List<Map<String, Object>> getMissionDataByUserId(@Param("userId") String userId);
 
     long countByUsersIdAndStatusAndIsRewardClaimedFalse(String userId, String status);
+    long countByUsersIdAndIsClaimed(String userId, boolean isClaimed);
 }

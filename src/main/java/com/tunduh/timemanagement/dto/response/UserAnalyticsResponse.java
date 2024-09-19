@@ -18,4 +18,6 @@ public class UserAnalyticsResponse implements Serializable {
     private Map<String, Long> taskStatusCounts;
     private Map<String, Long> missionStatusCounts;
     private Map<String, Double> pointsChangeByCategory;
+    private long claimedMissions;
+    private long unclaimedMissionRewards;
 }

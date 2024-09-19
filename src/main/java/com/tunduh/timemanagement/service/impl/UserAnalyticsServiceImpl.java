@@ -31,14 +31,18 @@ public class UserAnalyticsServiceImpl implements UserAnalyticsService {
         long completedTasks = taskRepository.countByUserIdAndStatus(userId, "COMPLETED");
         long pendingTasks = taskRepository.countByUserIdAndStatus(userId, "PENDING");
         long completedMissions = missionRepository.countByUsersIdAndStatus(userId, "COMPLETED");
+        long claimedMissions = missionRepository.countByUsersIdAndIsClaimed(userId, true);
         Double totalPointsChange = transactionRepository.sumPointsChangeByUserId(userId);
+        long unclaimedMissionRewards = missionRepository.countByUsersIdAndStatusAndIsRewardClaimedFalse(userId, "COMPLETED");
 
         return UserAnalyticsResponse.builder()
                 .totalTasks(totalTasks)
                 .completedTasks(completedTasks)
                 .pendingTasks(pendingTasks)
                 .completedMissions(completedMissions)
+                .claimedMissions(claimedMissions)
                 .totalPointsChange(totalPointsChange != null ? totalPointsChange : 0.0)
+                .unclaimedMissionRewards(unclaimedMissionRewards)
                 .build();
     }
 

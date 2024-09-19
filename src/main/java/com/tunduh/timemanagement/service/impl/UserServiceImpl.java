@@ -4,6 +4,7 @@ import com.tunduh.timemanagement.dto.request.UserUpdateRequest;
 import com.tunduh.timemanagement.dto.response.UserResponse;
 import com.tunduh.timemanagement.entity.UserEntity;
 import com.tunduh.timemanagement.exception.ResourceNotFoundException;
+import com.tunduh.timemanagement.repository.MissionRepository;
 import com.tunduh.timemanagement.repository.UserRepository;
 import com.tunduh.timemanagement.service.CloudinaryService;
 import com.tunduh.timemanagement.service.UserService;
@@ -27,13 +28,28 @@ public class UserServiceImpl implements UserService {
     private static final Logger logger = LoggerFactory.getLogger(UserServiceImpl.class);
 
     private final UserRepository userRepository;
+    private final MissionRepository missionRepository;
     private final CloudinaryService cloudinaryService;
 
     @Override
     @Cacheable(value = "user", key = "#userId")
     public UserResponse getCurrentUser(String userId) {
         UserEntity user = getUserById(userId);
-        return mapToUserResponse(user);
+        long claimedMissions = missionRepository.countByUsersIdAndIsClaimed(userId, true);
+        long completedMissions = missionRepository.countByUsersIdAndStatus(userId, "COMPLETED");
+        long unclaimedRewards = missionRepository.countByUsersIdAndStatusAndIsRewardClaimedFalse(userId, "COMPLETED");
+
+        return UserResponse.builder()
+                .id(user.getId())
+                .username(user.getUsername())
+                .email(user.getEmail())
+                .profilePicture(user.getProfilePicture())
+                .userPoint(user.getUserPoint())
+                .resetTime(user.getResetTime())
+                .claimedMissions(claimedMissions)
+                .completedMissions(completedMissions)
+                .unclaimedRewards(unclaimedRewards)
+                .build();
     }
 
     @Override

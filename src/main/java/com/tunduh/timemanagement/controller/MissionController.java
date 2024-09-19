@@ -1,5 +1,6 @@
 package com.tunduh.timemanagement.controller;
 
+import com.tunduh.timemanagement.dto.request.MissionClaimRequest;
 import com.tunduh.timemanagement.dto.request.MissionRequest;
 import com.tunduh.timemanagement.dto.response.MissionResponse;
 import com.tunduh.timemanagement.entity.UserEntity;
@@ -117,4 +118,25 @@ public class MissionController {
         log.debug("Reward for mission with ID: {} claimed by user: {}", id, user.getId());
         return Response.renderJSON(missionReward, "Mission reward claimed successfully!");
     }
+
+    @PostMapping("/claim")
+    @Operation(summary = "Claim a mission")
+    public ResponseEntity<?> claimMission(@RequestBody MissionClaimRequest request, Authentication authentication) {
+        UserEntity user = (UserEntity) authentication.getPrincipal();
+        log.info("Received request to claim mission with ID: {} for user: {}", request.getMissionId(), user.getId());
+        MissionResponse claimedMission = missionService.claimMission(request.getMissionId(), user.getId());
+        log.debug("Mission with ID: {} claimed by user: {}", request.getMissionId(), user.getId());
+        return Response.renderJSON(claimedMission, "Mission claimed successfully!");
+    }
+
+    @PostMapping("/claim-reward")
+    @Operation(summary = "Claim mission reward")
+    public ResponseEntity<?> claimMissionReward(@RequestBody MissionClaimRequest request, Authentication authentication) {
+        UserEntity user = (UserEntity) authentication.getPrincipal();
+        log.info("Received request to claim reward for mission with ID: {} for user: {}", request.getMissionId(), user.getId());
+        MissionResponse missionReward = missionService.claimMissionReward(request.getMissionId(), user.getId());
+        log.debug("Reward for mission with ID: {} claimed by user: {}", request.getMissionId(), user.getId());
+        return Response.renderJSON(missionReward, "Mission reward claimed successfully!");
+    }
+
 }
