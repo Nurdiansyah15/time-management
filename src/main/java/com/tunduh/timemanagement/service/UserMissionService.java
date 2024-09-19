@@ -7,7 +7,6 @@ import com.tunduh.timemanagement.utils.pagination.CustomPagination;
 import java.util.List;
 
 public interface UserMissionService {
-    List<UserMissionResponse> getUserMissions(String userId);
     UserMissionResponse getUserMissionProgress(String userId, String missionId);
     UserMissionResponse claimMission(String userId, String missionId);
     UserMissionResponse completeMission(String userId, String missionId);

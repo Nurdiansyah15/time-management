@@ -9,6 +9,7 @@ import com.tunduh.timemanagement.exception.ResourceNotFoundException;
 import com.tunduh.timemanagement.repository.MissionRepository;
 import com.tunduh.timemanagement.repository.UserMissionRepository;
 import com.tunduh.timemanagement.repository.UserRepository;
+import com.tunduh.timemanagement.service.MissionCompletionChecker;
 import com.tunduh.timemanagement.service.UserMissionService;
 import com.tunduh.timemanagement.utils.pagination.CustomPagination;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +30,7 @@ public class UserMissionServiceImpl implements UserMissionService {
     private final UserMissionRepository userMissionRepository;
     private final UserRepository userRepository;
     private final MissionRepository missionRepository;
+    private final MissionCompletionChecker missionCompletionChecker;
 
     @Override
     public CustomPagination<AdminMissionResponse> getAvailableMissions(String userId, int page, int size) {
@@ -55,16 +57,12 @@ public class UserMissionServiceImpl implements UserMissionService {
     @Override
     public CustomPagination<UserMissionResponse> getClaimedMissions(String userId, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
-        Page<UserMissionEntity> claimedMissionsPage = userMissionRepository.findByUserIdAndIsCompleted(userId, false, pageable);
-        return new CustomPagination<>(claimedMissionsPage.map(this::mapToUserMissionResponse));
-    }
 
-    @Override
-    public List<UserMissionResponse> getUserMissions(String userId) {
-        List<UserMissionEntity> userMissions = userMissionRepository.findByUserId(userId);
-        return userMissions.stream()
-                .map(this::mapToUserMissionResponse)
-                .collect(Collectors.toList());
+        Page<UserMissionEntity> claimedMissionsPage = userMissionRepository.findByUserIdAndIsCompleted(userId, false, pageable);
+
+        missionCompletionChecker.checkAllMissionsForUser(userId);
+
+        return new CustomPagination<>(claimedMissionsPage.map(this::mapToUserMissionResponse));
     }
 
     @Override
@@ -107,6 +105,7 @@ public class UserMissionServiceImpl implements UserMissionService {
 
         userMission.setIsCompleted(true);
         userMission.setCompletedAt(LocalDateTime.now());
+
         UserMissionEntity updatedUserMission = userMissionRepository.save(userMission);
         return mapToUserMissionResponse(updatedUserMission);
     }
@@ -136,6 +135,8 @@ public class UserMissionServiceImpl implements UserMissionService {
 
         return mapToUserMissionResponse(updatedUserMission);
     }
+
+
 
     private AdminMissionResponse mapToAdminMissionResponse(MissionEntity mission) {
        return AdminMissionResponse.builder()

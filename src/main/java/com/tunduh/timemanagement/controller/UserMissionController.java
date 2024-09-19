@@ -52,14 +52,6 @@ public class UserMissionController {
         return Response.renderJSON(claimedMissions, "Claimed missions retrieved successfully");
     }
 
-    @GetMapping
-    @Operation(summary = "Get all missions for the current user")
-    public ResponseEntity<?> getUserMissions(Authentication authentication) {
-        UserEntity user = (UserEntity) authentication.getPrincipal();
-        List<UserMissionResponse> userMissions = userMissionService.getUserMissions(user.getId());
-        return Response.renderJSON(userMissions, "User missions retrieved successfully");
-    }
-
     @GetMapping("/{missionId}")
     @Operation(summary = "Get specific mission progress for the current user")
     public ResponseEntity<?> getUserMissionProgress(@PathVariable String missionId, Authentication authentication) {
