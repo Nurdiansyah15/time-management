@@ -8,12 +8,6 @@ import com.tunduh.timemanagement.entity.UserEntity;
 public interface AuthService {
     boolean existsByEmail(String email);
 
-    UserEntity registerUser(RegisterRequest registerRequest);
-
-    UserEntity getOrCreateUser(String email, String name);
-
-    String createToken(UserEntity user);
-
     AuthResponse login(LoginRequest req);
 
     AuthResponse register(RegisterRequest req);

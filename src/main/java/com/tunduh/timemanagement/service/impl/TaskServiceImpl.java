@@ -1,10 +1,19 @@
 package com.tunduh.timemanagement.service.impl;
 
-import com.tunduh.timemanagement.dto.request.*;
-import com.tunduh.timemanagement.dto.response.*;
-import com.tunduh.timemanagement.entity.*;
+import com.tunduh.timemanagement.dto.request.TaskRequest;
+import com.tunduh.timemanagement.dto.request.TaskSessionRequest;
+import com.tunduh.timemanagement.dto.request.TaskSessionSyncRequest;
+import com.tunduh.timemanagement.dto.request.TaskSyncRequest;
+import com.tunduh.timemanagement.dto.response.TaskResponse;
+import com.tunduh.timemanagement.dto.response.TaskSessionResponse;
+import com.tunduh.timemanagement.dto.response.TaskSyncResponse;
+import com.tunduh.timemanagement.entity.TaskEntity;
+import com.tunduh.timemanagement.entity.TaskSessionEntity;
+import com.tunduh.timemanagement.entity.UserEntity;
 import com.tunduh.timemanagement.exception.ResourceNotFoundException;
-import com.tunduh.timemanagement.repository.*;
+import com.tunduh.timemanagement.repository.TaskRepository;
+import com.tunduh.timemanagement.repository.TaskSessionRepository;
+import com.tunduh.timemanagement.repository.UserRepository;
 import com.tunduh.timemanagement.service.CloudinaryService;
 import com.tunduh.timemanagement.service.TaskService;
 import com.tunduh.timemanagement.utils.pagination.CustomPagination;
@@ -13,15 +22,18 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
-import org.springframework.data.domain.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.time.*;
+import java.time.Duration;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -306,7 +318,6 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     @Transactional
-    @CacheEvict(value = "tasks", key = "#userId")
     public TaskResponse createTask(TaskRequest taskRequest, String userId) {
         UserEntity user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
@@ -406,7 +417,6 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
-    @Cacheable(value = "task", key = "#id")
     public TaskResponse getTaskById(String id, String userId) {
         TaskEntity task = taskRepository.findByIdAndUserId(id, userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Task not found for this user"));
@@ -415,7 +425,6 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     @Transactional
-    @CacheEvict(value = {"tasks", "task"}, key = "#id")
     public TaskResponse updateTask(String id, TaskRequest taskRequest, String userId) {
         TaskEntity task = taskRepository.findByIdAndUserId(id, userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Task not found for this user"));
@@ -441,7 +450,6 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     @Transactional
-    @CacheEvict(value = {"tasks", "task"}, key = "#id")
     public void deleteTask(String id, String userId) {
         TaskEntity task = taskRepository.findByIdAndUserId(id, userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Task not found for this user"));

@@ -25,10 +25,6 @@ import java.util.Map;
 public class AuthController {
     private final AuthService authService;
 
-
-    @Autowired
-    private JwtTokenProvider jwtTokenProvider;
-
     @GetMapping("/user")
     public Map<String, Object> user(@AuthenticationPrincipal OAuth2User principal) {
         return Collections.singletonMap("name", principal.getAttribute("name"));

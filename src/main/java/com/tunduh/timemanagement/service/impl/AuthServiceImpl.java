@@ -31,51 +31,15 @@ import java.util.List;
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
 
+    private static final int MIN_PASSWORD_LENGTH = 8;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
     private final AuthenticationManager authenticationManager;
-    private static final int MIN_PASSWORD_LENGTH = 8;
-
 
     @Override
     public boolean existsByEmail(String email) {
         return userRepository.existsByEmail(email);
-    }
-
-    @Override
-    public UserEntity registerUser(RegisterRequest registerRequest) {
-        if (existsByEmail(registerRequest.getEmail())) {
-            throw new RuntimeException("Email is already in use!");
-        }
-
-        UserEntity user = new UserEntity();
-        user.setUsername(registerRequest.getUsername());
-        user.setEmail(registerRequest.getEmail());
-        user.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
-        user.setRole(Role.ROLE_USER);
-
-        return userRepository.save(user);
-    }
-
-    @Override
-    public UserEntity getOrCreateUser(String email, String name) {
-        return userRepository.findByEmail(email)
-                .orElseGet(() -> {
-                    UserEntity newUser = new UserEntity();
-                    newUser.setEmail(email);
-                    newUser.setUsername(name);
-                    newUser.setRole(Role.ROLE_USER);
-                    return userRepository.save(newUser);
-                });
-    }
-
-    @Override
-    public String createToken(UserEntity user) {
-        CustomOAuth2User customOAuth2User = new CustomOAuth2User(user, Collections.emptyMap());
-        Authentication authentication = new UsernamePasswordAuthenticationToken(customOAuth2User, null, customOAuth2User.getAuthorities());
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-        return jwtTokenProvider.createToken(authentication.getPrincipal().toString());
     }
 
     @Override
@@ -86,7 +50,8 @@ public class AuthServiceImpl implements AuthService {
             );
 
             String accessToken = jwtTokenProvider.createToken(((UserEntity) auth.getPrincipal()).getId());
-            String refreshToken = jwtTokenProvider.createToken(((UserEntity) auth.getPrincipal()).getId());
+            String refreshToken = jwtTokenProvider.createRefreshToken(((UserEntity) auth.getPrincipal()).getId());
+
             return AuthResponse.builder()
                     .accessToken(accessToken)
                     .refreshToken(refreshToken)
@@ -121,7 +86,7 @@ public class AuthServiceImpl implements AuthService {
         UserEntity userResult = userRepository.save(user);
 
         String accessToken = jwtTokenProvider.createToken(userResult.getId());
-        String refreshToken = jwtTokenProvider.createToken(userResult.getId());
+        String refreshToken = jwtTokenProvider.createRefreshToken(userResult.getId());
 
         return AuthResponse.builder()
                 .accessToken(accessToken)

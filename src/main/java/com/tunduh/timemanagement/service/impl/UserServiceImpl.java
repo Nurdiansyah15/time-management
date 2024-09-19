@@ -33,7 +33,6 @@ public class UserServiceImpl implements UserService {
     private final CloudinaryService cloudinaryService;
 
     @Override
-    @Cacheable(value = "user", key = "#userId")
     public UserResponse getCurrentUser(String userId) {
         UserEntity user = getUserById(userId);
         long claimedMissions = missionRepository.countByUserIdAndIsCompleted(userId, true);
@@ -47,6 +46,7 @@ public class UserServiceImpl implements UserService {
                 .profilePicture(user.getProfilePicture())
                 .userPoint(user.getUserPoint())
                 .resetTime(user.getResetTime())
+                .role(user.getRole())
                 .claimedMissions(claimedMissions)
                 .completedMissions(completedMissions)
                 .unclaimedRewards(unclaimedRewards)
@@ -55,7 +55,6 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    @CacheEvict(value = "user", key = "#userId")
     public UserResponse addPoints(String userId, int points) {
         UserEntity user = getUserById(userId);
         user.setUserPoint(user.getUserPoint() + points);
@@ -77,7 +76,6 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    @CacheEvict(value = "user", key = "#userId")
     public UserResponse updateUser(String userId, UserUpdateRequest updateRequest) {
         UserEntity user = getUserById(userId);
         user.setUsername(updateRequest.getUsername());
