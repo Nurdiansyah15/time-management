@@ -138,5 +138,4 @@ public class MissionController {
         log.debug("Reward for mission with ID: {} claimed by user: {}", request.getMissionId(), user.getId());
         return Response.renderJSON(missionReward, "Mission reward claimed successfully!");
     }
-
 }
