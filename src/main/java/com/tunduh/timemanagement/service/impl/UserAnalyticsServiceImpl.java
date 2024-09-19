@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -21,139 +22,106 @@ import java.util.stream.Collectors;
 @Slf4j
 public class UserAnalyticsServiceImpl implements UserAnalyticsService {
 
+    private static final String COMPLETED_STATUS = "COMPLETED";
+    private static final String PENDING_STATUS = "PENDING";
+
     private final TaskRepository taskRepository;
     private final MissionRepository missionRepository;
     private final TransactionRepository transactionRepository;
 
     @Override
     public UserAnalyticsResponse getUserAnalyticsDashboard(String userId) {
-        long totalTasks = taskRepository.countByUserId(userId);
-        long completedTasks = taskRepository.countByUserIdAndStatus(userId, "COMPLETED");
-        long pendingTasks = taskRepository.countByUserIdAndStatus(userId, "PENDING");
-        long completedMissions = missionRepository.countByUsersIdAndStatus(userId, "COMPLETED");
-        long claimedMissions = missionRepository.countByUsersIdAndIsClaimed(userId, true);
-        Double totalPointsChange = transactionRepository.sumPointsChangeByUserId(userId);
-        long unclaimedMissionRewards = missionRepository.countByUsersIdAndStatusAndIsRewardClaimedFalse(userId, "COMPLETED");
-
         return UserAnalyticsResponse.builder()
-                .totalTasks(totalTasks)
-                .completedTasks(completedTasks)
-                .pendingTasks(pendingTasks)
-                .completedMissions(completedMissions)
-                .claimedMissions(claimedMissions)
-                .totalPointsChange(totalPointsChange != null ? totalPointsChange : 0.0)
-                .unclaimedMissionRewards(unclaimedMissionRewards)
+                .totalTasks(taskRepository.countByUserId(userId))
+                .completedTasks(taskRepository.countByUserIdAndStatus(userId, COMPLETED_STATUS))
+                .pendingTasks(taskRepository.countByUserIdAndStatus(userId, PENDING_STATUS))
+                .completedMissions(missionRepository.countByUsersIdAndStatus(userId, COMPLETED_STATUS))
+                .claimedMissions(missionRepository.countByUsersIdAndIsClaimed(userId, true))
+                .totalPointsChange(transactionRepository.sumPointsChangeByUserId(userId))
+                .unclaimedMissionRewards(missionRepository.countByUsersIdAndStatusAndIsRewardClaimedFalse(userId, COMPLETED_STATUS))
                 .build();
     }
 
     @Override
     public UserAnalyticsResponse getTaskAnalytics(String userId, LocalDate startDate, LocalDate endDate) {
-        List<Map<String, Object>> taskData = taskRepository.getTaskDataByUserIdAndDateRange(userId,
-                startDate.atStartOfDay(), endDate.atTime(23, 59, 59));
-
-        Map<String, Long> taskCompletionByDate = taskData.stream()
-                .collect(Collectors.groupingBy(
-                        m -> m.get("date").toString(),
-                        Collectors.summingLong(m -> ((Number) m.get("count")).longValue())
-                ));
-
-        Map<String, Long> taskStatusCounts = taskData.stream()
-                .collect(Collectors.groupingBy(
-                        m -> m.get("status").toString(),
-                        Collectors.summingLong(m -> ((Number) m.get("count")).longValue())
-                ));
-
+        List<Map<String, Object>> taskData = getTaskDataForDateRange(userId, startDate, endDate);
         return UserAnalyticsResponse.builder()
-                .taskCompletionByDate(taskCompletionByDate)
-                .taskStatusCounts(taskStatusCounts)
+                .taskCompletionByDate(getGroupedData(taskData, "date", "count"))
+                .taskStatusCounts(getGroupedData(taskData, "status", "count"))
                 .build();
     }
 
     @Override
     public UserAnalyticsResponse getMissionAnalytics(String userId) {
         List<Map<String, Object>> missionData = missionRepository.getMissionDataByUserId(userId);
-
-        Map<String, Long> missionStatusCounts = missionData.stream()
-                .collect(Collectors.groupingBy(
-                        m -> m.get("status").toString(),
-                        Collectors.summingLong(m -> ((Number) m.get("count")).longValue())
-                ));
-
         return UserAnalyticsResponse.builder()
-                .missionStatusCounts(missionStatusCounts)
+                .missionStatusCounts(getGroupedData(missionData, "status", "count"))
                 .build();
     }
 
     @Override
     public UserAnalyticsResponse getBudgetAnalytics(String userId, LocalDate startDate, LocalDate endDate) {
-        Double totalPointsChange = transactionRepository.sumPointsChangeByUserIdAndDateRange(userId,
-                startDate.atStartOfDay(), endDate.atTime(23, 59, 59));
+        LocalDateTime start = startDate.atStartOfDay();
+        LocalDateTime end = endDate.atTime(23, 59, 59);
 
-        List<Map<String, Object>> transactionSummary = transactionRepository.getTransactionSummaryByUserIdAndDateRange(userId,
-                startDate.atStartOfDay(), endDate.atTime(23, 59, 59));
-
-        Map<String, Double> pointsChangeByCategory = transactionSummary.stream()
-                .collect(Collectors.toMap(
-                        m -> m.get("category").toString(),
-                        m -> ((Number) m.get("totalChange")).doubleValue()
-                ));
+        Double totalPointsChange = transactionRepository.sumPointsChangeByUserIdAndDateRange(userId, start, end);
+        List<Map<String, Object>> transactionSummary = transactionRepository.getTransactionSummaryByUserIdAndDateRange(userId, start, end);
 
         return UserAnalyticsResponse.builder()
                 .totalPointsChange(totalPointsChange != null ? totalPointsChange : 0.0)
-                .pointsChangeByCategory(pointsChangeByCategory)
+                .pointsChangeByCategory(getGroupedData(transactionSummary, "category", "totalChange"))
                 .build();
     }
 
     @Override
     public String getTaskAnalyticsCSV(String userId, LocalDate startDate, LocalDate endDate) {
         log.info("Generating task analytics CSV for user {} from {} to {}", userId, startDate, endDate);
-        List<Map<String, Object>> taskData = taskRepository.getTaskDataByUserIdAndDateRange(userId,
-                startDate.atStartOfDay(), endDate.atTime(23, 59, 59));
-
-        List<String[]> csvData = new ArrayList<>();
-        csvData.add(new String[]{"Date", "Status", "Count"});
-        for (Map<String, Object> entry : taskData) {
-            csvData.add(new String[]{
-                    entry.get("date").toString(),
-                    entry.get("status").toString(),
-                    entry.get("count").toString()
-            });
-        }
-        return CSVUtil.generateCSV(csvData);
+        List<Map<String, Object>> taskData = getTaskDataForDateRange(userId, startDate, endDate);
+        return generateCSV(taskData, new String[]{"Date", "Status", "Count"},
+                entry -> new String[]{entry.get("date").toString(), entry.get("status").toString(), entry.get("count").toString()});
     }
 
     @Override
     public String getMissionAnalyticsCSV(String userId) {
         log.info("Generating mission analytics CSV for user {}", userId);
         List<Map<String, Object>> missionData = missionRepository.getMissionDataByUserId(userId);
-
-        List<String[]> csvData = new ArrayList<>();
-        csvData.add(new String[]{"Status", "Count"});
-
-        for (Map<String, Object> entry : missionData) {
-            csvData.add(new String[]{
-                    entry.get("status").toString(),
-                    entry.get("count").toString()
-            });
-        }
-
-        return CSVUtil.generateCSV(csvData);
+        return generateCSV(missionData, new String[]{"Status", "Count"},
+                entry -> new String[]{entry.get("status").toString(), entry.get("count").toString()});
     }
 
     @Override
     public String getBudgetAnalyticsCSV(String userId, LocalDate startDate, LocalDate endDate) {
         log.info("Generating budget analytics CSV for user {} from {} to {}", userId, startDate, endDate);
-        List<Map<String, Object>> transactionSummary = transactionRepository.getTransactionSummaryByUserIdAndDateRange(userId,
-                startDate.atStartOfDay(), endDate.atTime(23, 59, 59));
+        List<Map<String, Object>> transactionSummary = getTransactionSummaryForDateRange(userId, startDate, endDate);
+        return generateCSV(transactionSummary, new String[]{"Category", "Total Points Change"},
+                entry -> new String[]{entry.get("category").toString(), entry.get("totalChange").toString()});
+    }
 
+    private List<Map<String, Object>> getTaskDataForDateRange(String userId, LocalDate startDate, LocalDate endDate) {
+        return taskRepository.getTaskDataByUserIdAndDateRange(userId, startDate.atStartOfDay(), endDate.atTime(23, 59, 59));
+    }
+
+    private List<Map<String, Object>> getTransactionSummaryForDateRange(String userId, LocalDate startDate, LocalDate endDate) {
+        return transactionRepository.getTransactionSummaryByUserIdAndDateRange(userId, startDate.atStartOfDay(), endDate.atTime(23, 59, 59));
+    }
+
+    private <T> Map<String, T> getGroupedData(List<Map<String, Object>> data, String keyField, String valueField) {
+        return data.stream()
+                .collect(Collectors.groupingBy(
+                        m -> m.get(keyField).toString(),
+                        Collectors.summingDouble(m -> ((Number) m.get(valueField)).doubleValue())
+                ))
+                .entrySet().stream()
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        e -> (T) (valueField.equals("count") ? e.getValue().longValue() : e.getValue())
+                ));
+    }
+
+    private String generateCSV(List<Map<String, Object>> data, String[] headers, java.util.function.Function<Map<String, Object>, String[]> rowMapper) {
         List<String[]> csvData = new ArrayList<>();
-        csvData.add(new String[]{"Category", "Total Points Change"});
-        for (Map<String, Object> entry : transactionSummary) {
-            csvData.add(new String[]{
-                    entry.get("category").toString(),
-                    entry.get("totalChange").toString()
-            });
-        }
+        csvData.add(headers);
+        data.forEach(entry -> csvData.add(rowMapper.apply(entry)));
         return CSVUtil.generateCSV(csvData);
     }
 }
