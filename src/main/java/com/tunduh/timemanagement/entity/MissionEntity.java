@@ -73,4 +73,7 @@ public class MissionEntity {
     @UpdateTimestamp
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @OneToMany(mappedBy = "mission", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<UserMissionEntity> userMissions = new HashSet<>();
 }

@@ -1,7 +1,5 @@
 package com.tunduh.timemanagement.repository;
 
-import com.tunduh.timemanagement.entity.SubmissionEntity;
-import com.tunduh.timemanagement.entity.TaskEntity;
 import com.tunduh.timemanagement.entity.TaskSessionEntity;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

@@ -3,11 +3,7 @@ package com.tunduh.timemanagement.service.impl;
 import com.tunduh.timemanagement.dto.request.MissionRequest;
 import com.tunduh.timemanagement.dto.response.MissionProgressResponse;
 import com.tunduh.timemanagement.dto.response.MissionResponse;
-import com.tunduh.timemanagement.entity.MissionEntity;
-import com.tunduh.timemanagement.entity.SubmissionEntity;
-import com.tunduh.timemanagement.entity.TaskEntity;
-import com.tunduh.timemanagement.entity.UserEntity;
-import com.tunduh.timemanagement.entity.TransactionEntity;
+import com.tunduh.timemanagement.entity.*;
 import com.tunduh.timemanagement.exception.ResourceNotFoundException;
 import com.tunduh.timemanagement.repository.MissionRepository;
 import com.tunduh.timemanagement.repository.SubmissionRepository;
@@ -45,6 +41,7 @@ public class MissionServiceImpl implements MissionService {
     private final TaskRepository taskRepository;
     private final TransactionService transactionService;
     private final CloudinaryService cloudinaryService;
+    private final UserMissionEntity userMission;
 
     @Override
     @Transactional
@@ -314,6 +311,71 @@ public class MissionServiceImpl implements MissionService {
                 .totalRequiredDuration(mission.getRequiredDuration())
                 .progressPercentage(Math.min(progressPercentage, 100))
                 .build();
+    }
+
+    @Override
+    @Transactional
+    public MissionResponse claimMission(String missionId, String userId) {
+        MissionEntity mission = missionRepository.findById(missionId)
+                .orElseThrow(() -> new ResourceNotFoundException("Mission not found"));
+        UserEntity user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        if (userMissionRepository.existsByMissionIdAndUserId(missionId, userId)) {
+            throw new IllegalStateException("Mission already claimed by this user");
+        }
+
+        UserMissionEntity userMission = UserMissionEntity.builder()
+                .user(user)
+                .mission(mission)
+                .build();
+
+        userMissionRepository.save(userMission);
+
+        return mapToMissionResponse(mission);
+    }
+
+    @Override
+    @Transactional
+    public MissionResponse completeMission(String missionId, String userId) {
+        UserMissionEntity userMission = userMissionRepository.findByMissionIdAndUserId(missionId, userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User mission not found"));
+
+        if (userMission.getIsCompleted()) {
+            throw new IllegalStateException("Mission already completed");
+        }
+
+        userMission.setIsCompleted(true);
+        userMission.setCompletedAt(LocalDateTime.now());
+        userMissionRepository.save(userMission);
+
+        return mapToMissionResponse(userMission.getMission());
+    }
+
+    @Override
+    @Transactional
+    public MissionResponse claimMissionReward(String missionId, String userId) {
+        UserMissionEntity userMission = userMissionRepository.findByMissionIdAndUserId(missionId, userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User mission not found"));
+
+        if (!userMission.getIsCompleted()) {
+            throw new IllegalStateException("Mission not completed yet");
+        }
+
+        if (userMission.getIsRewardClaimed()) {
+            throw new IllegalStateException("Reward already claimed");
+        }
+
+        userMission.setIsRewardClaimed(true);
+        userMission.setRewardClaimedAt(LocalDateTime.now());
+        userMissionRepository.save(userMission);
+
+        // Add points to user
+        UserEntity user = userMission.getUser();
+        user.setUserPoint(user.getUserPoint() + userMission.getMission().getPointReward());
+        userRepository.save(user);
+
+        return mapToMissionResponse(userMission.getMission());
     }
 
     private MissionResponse mapToMissionResponse(MissionEntity mission) {
