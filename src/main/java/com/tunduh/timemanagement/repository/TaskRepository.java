@@ -85,4 +85,5 @@ public interface TaskRepository extends JpaRepository<TaskEntity, String>, JpaSp
                                                               @Param("endDate") LocalDateTime endDate);
 
     List<TaskEntity> findByUserAndCreatedAtAfter(UserEntity user, LocalDateTime missionStartTime);
+    List<TaskEntity> findByUserIdAndCreatedAtBetween(String userId, LocalDateTime start, LocalDateTime end);
 }

@@ -88,6 +88,16 @@ public class MissionController {
         return Response.renderJSON(null, "Mission deleted successfully!");
     }
 
+    @PostMapping("/{missionId}/assign/{userId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Assign a mission to a user")
+    public ResponseEntity<?> assignMissionToUser(@PathVariable String missionId, @PathVariable String userId) {
+        log.info("Received request to assign mission with ID: {} to user with ID: {}", missionId, userId);
+        MissionResponse assignedMission = missionService.assignMissionToUser(missionId, userId);
+        log.debug("Mission with ID: {} assigned to user with ID: {}", missionId, userId);
+        return Response.renderJSON(assignedMission, "Mission assigned to user successfully!");
+    }
+
     @PostMapping("/{id}/claim")
     @Operation(summary = "Claim a mission")
     public ResponseEntity<?> claimMission(@PathVariable String id, Authentication authentication) {
@@ -98,13 +108,13 @@ public class MissionController {
         return Response.renderJSON(claimedMission, "Mission claimed successfully!");
     }
 
-    @PostMapping("/{missionId}/assign/{userId}")
-    @PreAuthorize("hasRole('ADMIN')")
-    @Operation(summary = "Assign a mission to a user")
-    public ResponseEntity<?> assignMissionToUser(@PathVariable String missionId, @PathVariable String userId) {
-        log.info("Received request to assign mission with ID: {} to user with ID: {}", missionId, userId);
-        MissionResponse assignedMission = missionService.assignMissionToUser(missionId, userId);
-        log.debug("Mission with ID: {} assigned to user with ID: {}", missionId, userId);
-        return Response.renderJSON(assignedMission, "Mission assigned to user successfully!");
+    @PostMapping("/{id}/claim-reward")
+    @Operation(summary = "Claim mission reward")
+    public ResponseEntity<?> claimMissionReward(@PathVariable String id, Authentication authentication) {
+        UserEntity user = (UserEntity) authentication.getPrincipal();
+        log.info("Received request to claim reward for mission with ID: {} for user: {}", id, user.getId());
+        MissionResponse missionReward = missionService.claimMissionReward(id, user.getId());
+        log.debug("Reward for mission with ID: {} claimed by user: {}", id, user.getId());
+        return Response.renderJSON(missionReward, "Mission reward claimed successfully!");
     }
 }

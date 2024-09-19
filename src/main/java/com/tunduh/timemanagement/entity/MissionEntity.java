@@ -58,6 +58,9 @@ public class MissionEntity {
 
     @Column(name = "is_reward_claimed", nullable = false)
     private Boolean isRewardClaimed = false;
+    
+    @Column(name = "is_claimed", nullable = false)
+    private Boolean isClaimed = false;
 
     @ManyToMany
     @JoinTable(

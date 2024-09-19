@@ -1,11 +1,9 @@
 package com.tunduh.timemanagement.dto.response;
 
-import jakarta.persistence.Column;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
@@ -24,6 +22,10 @@ public class MissionResponse implements Serializable {
     private Integer requiredDuration;
     private Boolean isDurationOnly;
     private Boolean isTaskOnly;
-    private LocalDateTime updatedAt;
+    private LocalDateTime startDate;
+    private LocalDateTime endDate;
+    private Boolean isClaimed;
+    private Boolean isRewardClaimed;
     private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 }
