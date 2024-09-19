@@ -1,6 +1,7 @@
 package com.tunduh.timemanagement.service.impl;
 
 import com.tunduh.timemanagement.dto.response.UserAnalyticsResponse;
+import com.tunduh.timemanagement.entity.MissionEntity;
 import com.tunduh.timemanagement.repository.MissionRepository;
 import com.tunduh.timemanagement.repository.TaskRepository;
 import com.tunduh.timemanagement.repository.TransactionRepository;
@@ -35,10 +36,10 @@ public class UserAnalyticsServiceImpl implements UserAnalyticsService {
                 .totalTasks(taskRepository.countByUserId(userId))
                 .completedTasks(taskRepository.countByUserIdAndStatus(userId, COMPLETED_STATUS))
                 .pendingTasks(taskRepository.countByUserIdAndStatus(userId, PENDING_STATUS))
-                .completedMissions(missionRepository.countByUsersIdAndStatus(userId, COMPLETED_STATUS))
-                .claimedMissions(missionRepository.countByUsersIdAndIsClaimed(userId, true))
+                .completedMissions(missionRepository.countByUserIdAndIsCompleted(userId, true))
+                .claimedMissions(missionRepository.countByUserIdAndIsCompleted(userId, true))
                 .totalPointsChange(transactionRepository.sumPointsChangeByUserId(userId))
-                .unclaimedMissionRewards(missionRepository.countByUsersIdAndStatusAndIsRewardClaimedFalse(userId, COMPLETED_STATUS))
+                .unclaimedMissionRewards(missionRepository.countByUserIdAndStatusAndIsRewardClaimedFalse(userId, MissionEntity.MissionStatus.COMPLETED))
                 .build();
     }
 
