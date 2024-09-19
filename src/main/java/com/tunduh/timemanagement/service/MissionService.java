@@ -13,5 +13,6 @@ public interface MissionService {
     MissionResponse updateMission(String id, MissionRequest missionRequest);
     void deleteMission(String id);
     MissionResponse claimMission(String id, String userId);
-    MissionResponse assignMissionToUser(String missionId, String userId);
+    MissionResponse claimMissionReward(String id, String userId);
+    void checkAndUpdateMissions();
 }

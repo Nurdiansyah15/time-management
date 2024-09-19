@@ -1,4 +1,4 @@
-package com.tunduh.timemanagement.service;
+package com.tunduh.timemanagement.service.impl;
 
 import com.tunduh.timemanagement.dto.request.MissionRequest;
 import com.tunduh.timemanagement.dto.response.MissionResponse;
@@ -12,7 +12,11 @@ import com.tunduh.timemanagement.repository.MissionRepository;
 import com.tunduh.timemanagement.repository.SubmissionRepository;
 import com.tunduh.timemanagement.repository.TaskRepository;
 import com.tunduh.timemanagement.repository.UserRepository;
+import com.tunduh.timemanagement.service.CloudinaryService;
+import com.tunduh.timemanagement.service.MissionService;
+import com.tunduh.timemanagement.service.TransactionService;
 import com.tunduh.timemanagement.utils.pagination.CustomPagination;
+import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
@@ -26,8 +30,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -60,6 +64,8 @@ public class MissionServiceImpl implements MissionService {
                 .isTaskOnly(missionRequest.getIsTaskOnly())
                 .startDate(missionRequest.getStartDate())
                 .endDate(missionRequest.getEndDate())
+                .isClaimed(false)
+                .isRewardClaimed(false)
                 .build();
 
         MissionEntity savedMission = missionRepository.save(mission);
@@ -92,14 +98,14 @@ public class MissionServiceImpl implements MissionService {
         }
         Page<MissionEntity> missionPage = missionRepository.findAll(
                 (root, query, cb) -> {
-                    List<jakarta.persistence.criteria.Predicate> predicates = new ArrayList<>();
+                    List<Predicate> predicates = new ArrayList<>();
                     if (name != null && !name.isEmpty()) {
                         predicates.add(cb.like(cb.lower(root.get("name")), "%" + name.toLowerCase() + "%"));
                     }
                     if (status != null && !status.isEmpty()) {
                         predicates.add(cb.equal(root.get("status"), status));
                     }
-                    return cb.and(predicates.toArray(new jakarta.persistence.criteria.Predicate[0]));
+                    return cb.and(predicates.toArray(new Predicate[0]));
                 },
                 PageRequest.of(page, size, Sort.by(direction, sort))
         );
@@ -152,45 +158,64 @@ public class MissionServiceImpl implements MissionService {
 
     @Override
     @Transactional
-    public MissionResponse assignMissionToAllUsers(String missionId) {
-        log.info("Assigning mission {} to all users", missionId);
-        MissionEntity mission = missionRepository.findById(missionId)
+    public MissionResponse claimMission(String id, String userId) {
+        log.info("User {} claiming mission {}", userId, id);
+        MissionEntity mission = missionRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Mission not found"));
-        List<UserEntity> allUsers = userRepository.findAll();
-        mission.getUsers().addAll(allUsers);
+        UserEntity user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        if (mission.getIsClaimed()) {
+            throw new IllegalStateException("Mission already claimed");
+        }
+
+        if (mission.getStartDate().isAfter(LocalDateTime.now())) {
+            throw new IllegalStateException("Mission has not started yet");
+        }
+
+        if (mission.getEndDate().isBefore(LocalDateTime.now())) {
+            throw new IllegalStateException("Mission has already ended");
+        }
+
+        mission.getUsers().add(user);
+        mission.setIsClaimed(true);
         MissionEntity updatedMission = missionRepository.save(mission);
-        log.debug("Mission {} assigned to all users", missionId);
+
+        log.debug("Mission {} claimed by user {}", id, userId);
         return mapToMissionResponse(updatedMission);
     }
 
+    @Override
     @Transactional
-    public MissionResponse claimMissionReward(String missionId, String userId) {
-        log.info("Claiming reward for mission {} by user {}", missionId, userId);
-        MissionEntity mission = missionRepository.findByIdAndUsersId(missionId, userId)
-                .orElseThrow(() -> new ResourceNotFoundException("Mission not found or user not assigned"));
+    public MissionResponse claimMissionReward(String id, String userId) {
+        log.info("User {} claiming reward for mission {}", userId, id);
+        MissionEntity mission = missionRepository.findByIdAndUsersId(id, userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Mission not found or not claimed by user"));
 
         if (!"COMPLETED".equals(mission.getStatus())) {
-            log.error("Mission {} is not completed", missionId);
             throw new IllegalStateException("Mission is not completed");
         }
 
         if (mission.getIsRewardClaimed()) {
-            log.error("Reward for mission {} already claimed", missionId);
             throw new IllegalStateException("Reward already claimed");
+        }
+
+        if (!checkMissionCompletion(mission, userId)) {
+            throw new IllegalStateException("Mission requirements not met");
         }
 
         mission.setIsRewardClaimed(true);
         missionRepository.save(mission);
 
-        // Create transaction for mission completion
         transactionService.createTransaction(userId, mission.getPointReward(),
                 TransactionEntity.TransactionType.MISSION_COMPLETION,
                 "Completed mission: " + mission.getName());
 
-        log.debug("Reward claimed for mission {} by user {}", missionId, userId);
+        log.debug("Reward claimed for mission {} by user {}", id, userId);
         return mapToMissionResponse(mission);
     }
 
+    @Override
     @Scheduled(fixedRate = 60000) // Run every minute
     @Transactional
     public void checkAndUpdateMissions() {
@@ -207,7 +232,7 @@ public class MissionServiceImpl implements MissionService {
             }
 
             for (UserEntity user : mission.getUsers()) {
-                if (checkMissionCompletion(mission, user)) {
+                if (checkMissionCompletion(mission, user.getId())) {
                     mission.setStatus("COMPLETED");
                     missionRepository.save(mission);
                     log.debug("Mission {} completed by user {}", mission.getId(), user.getId());
@@ -218,9 +243,10 @@ public class MissionServiceImpl implements MissionService {
         log.info("Finished checking and updating missions");
     }
 
-    private boolean checkMissionCompletion(MissionEntity mission, UserEntity user) {
+    private boolean checkMissionCompletion(MissionEntity mission, String userId) {
         LocalDateTime missionStartTime = mission.getStartDate();
-        List<TaskEntity> userTasks = taskRepository.findByUserAndCreatedAtAfter(user, missionStartTime);
+        List<TaskEntity> userTasks = taskRepository.findByUserIdAndCreatedAtBetween(
+                userId, missionStartTime, LocalDateTime.now());
 
         int completedTaskCount = (int) userTasks.stream()
                 .filter(task -> "COMPLETED".equals(task.getStatus()))
@@ -256,6 +282,7 @@ public class MissionServiceImpl implements MissionService {
                 .isTaskOnly(mission.getIsTaskOnly())
                 .startDate(mission.getStartDate())
                 .endDate(mission.getEndDate())
+                .isClaimed(mission.getIsClaimed())
                 .isRewardClaimed(mission.getIsRewardClaimed())
                 .createdAt(mission.getCreatedAt())
                 .updatedAt(mission.getUpdatedAt())
