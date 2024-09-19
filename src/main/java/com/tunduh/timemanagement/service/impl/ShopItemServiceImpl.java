@@ -44,7 +44,6 @@ public class ShopItemServiceImpl implements ShopItemService {
 
     @Override
     @Transactional
-    @CacheEvict(value = "shopItems", allEntries = true)
     public ShopItemResponse createShopItem(ShopItemRequest shopItemRequest) {
         ShopItemEntity shopItem = ShopItemEntity.builder()
                 .name(shopItemRequest.getName())
@@ -61,7 +60,6 @@ public class ShopItemServiceImpl implements ShopItemService {
 
     @Override
     @Transactional
-    @CacheEvict(value = "shopItems", allEntries = true)
     public ShopItemResponse updatePhoto(MultipartFile file, String id) {
         ShopItemEntity shopItem = shopItemRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Shop item not found"));
@@ -72,7 +70,6 @@ public class ShopItemServiceImpl implements ShopItemService {
     }
 
     @Override
-    @Cacheable(value = "shopItems", key = "#root.methodName + '_' + #page + '_' + #size + '_' + #sort + '_' + #name + '_' + #maxPrice + '_' + #category")
     public CustomPagination<ShopItemResponse> getAllShopItems(int page, int size, String sort, String name, Integer maxPrice, ShopItemEntity.ItemCategory category) {
         Pageable pageable = createPageable(page, size, sort);
         Specification<ShopItemEntity> spec = createSpecification(name, maxPrice, category);
@@ -81,7 +78,6 @@ public class ShopItemServiceImpl implements ShopItemService {
     }
 
     @Override
-    @Cacheable(value = "shopItem", key = "#id")
     public ShopItemResponse getShopItemById(String id) {
         ShopItemEntity shopItem = shopItemRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Shop item not found"));
@@ -90,7 +86,6 @@ public class ShopItemServiceImpl implements ShopItemService {
 
     @Override
     @Transactional
-    @CacheEvict(value = {"shopItems", "shopItem"}, key = "#id")
     public ShopItemResponse updateShopItem(String id, ShopItemRequest shopItemRequest) {
         ShopItemEntity shopItem = shopItemRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Shop item not found"));
@@ -106,7 +101,6 @@ public class ShopItemServiceImpl implements ShopItemService {
 
     @Override
     @Transactional
-    @CacheEvict(value = {"shopItems", "shopItem"}, key = "#id")
     public void deleteShopItem(String id) {
         ShopItemEntity shopItem = shopItemRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Shop item not found"));
