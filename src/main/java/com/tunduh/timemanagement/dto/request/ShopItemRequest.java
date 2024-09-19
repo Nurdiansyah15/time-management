@@ -1,10 +1,10 @@
 package com.tunduh.timemanagement.dto.request;
 
+import com.tunduh.timemanagement.entity.ShopItemEntity.ItemCategory;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Min;
 import lombok.Data;
-import com.tunduh.timemanagement.entity.ShopItemEntity.ItemCategory;
 
 @Data
 public class ShopItemRequest {

@@ -6,6 +6,7 @@ import com.tunduh.timemanagement.dto.response.ShopItemResponse;
 import com.tunduh.timemanagement.entity.ShopItemEntity;
 import com.tunduh.timemanagement.entity.UserEntity;
 import com.tunduh.timemanagement.entity.PurchaseEntity;
+import com.tunduh.timemanagement.entity.TransactionEntity;
 import com.tunduh.timemanagement.exception.InsufficientPointsException;
 import com.tunduh.timemanagement.exception.ResourceNotFoundException;
 import com.tunduh.timemanagement.repository.ShopItemRepository;
@@ -13,6 +14,7 @@ import com.tunduh.timemanagement.repository.UserRepository;
 import com.tunduh.timemanagement.repository.PurchaseRepository;
 import com.tunduh.timemanagement.service.CloudinaryService;
 import com.tunduh.timemanagement.service.ShopItemService;
+import com.tunduh.timemanagement.service.TransactionService;
 import com.tunduh.timemanagement.utils.pagination.CustomPagination;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
@@ -38,6 +40,7 @@ public class ShopItemServiceImpl implements ShopItemService {
     private final UserRepository userRepository;
     private final PurchaseRepository purchaseRepository;
     private final CloudinaryService cloudinaryService;
+    private final TransactionService transactionService;
 
     @Override
     @Transactional
@@ -122,13 +125,18 @@ public class ShopItemServiceImpl implements ShopItemService {
         if (user.getUserPoint() < totalPrice) {
             throw new InsufficientPointsException("User does not have enough points to make this purchase");
         }
+
         if (shopItem.getStock() < quantity) {
             throw new IllegalStateException("Not enough stock available");
         }
 
         shopItem.setStock(shopItem.getStock() - quantity);
-        user.setUserPoint(user.getUserPoint() - totalPrice);
-        userRepository.save(user);
+        shopItemRepository.save(shopItem);
+
+        // Create transaction for purchase
+        transactionService.createTransaction(userId, -totalPrice,
+                TransactionEntity.TransactionType.PURCHASE,
+                "Purchase of " + quantity + " " + shopItem.getName());
 
         PurchaseEntity purchase = PurchaseEntity.builder()
                 .user(user)
@@ -138,17 +146,9 @@ public class ShopItemServiceImpl implements ShopItemService {
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
                 .build();
-        PurchaseEntity savedPurchase = purchaseRepository.save(purchase);
 
-        return PurchaseResponse.builder()
-                .id(savedPurchase.getId())
-                .userId(user.getId())
-                .shopItemId(shopItem.getId())
-                .shopItemName(shopItem.getName())
-                .quantity(quantity)
-                .totalPrice(totalPrice)
-                .createdAt(savedPurchase.getCreatedAt())
-                .build();
+        PurchaseEntity savedPurchase = purchaseRepository.save(purchase);
+        return mapToPurchaseResponse(savedPurchase);
     }
 
     private ShopItemResponse mapToShopItemResponse(ShopItemEntity shopItem) {
@@ -157,8 +157,23 @@ public class ShopItemServiceImpl implements ShopItemService {
                 .name(shopItem.getName())
                 .itemPicture(shopItem.getItemPicture())
                 .price(shopItem.getPrice())
+                .stock(shopItem.getStock())
+                .category(shopItem.getCategory())
+                .description(shopItem.getDescription())
                 .createdAt(shopItem.getCreatedAt())
                 .updatedAt(shopItem.getUpdatedAt())
+                .build();
+    }
+
+    private PurchaseResponse mapToPurchaseResponse(PurchaseEntity purchase) {
+        return PurchaseResponse.builder()
+                .id(purchase.getId())
+                .userId(purchase.getUser().getId())
+                .shopItemId(purchase.getShopItem().getId())
+                .shopItemName(purchase.getShopItem().getName())
+                .quantity(purchase.getQuantity())
+                .totalPrice(purchase.getTotalPrice())
+                .createdAt(purchase.getCreatedAt())
                 .build();
     }
 
@@ -169,7 +184,8 @@ public class ShopItemServiceImpl implements ShopItemService {
             for (String param : sortParams) {
                 String[] keyDirection = param.split(":");
                 String key = keyDirection[0];
-                Sort.Direction direction = keyDirection.length > 1 && keyDirection[1].equalsIgnoreCase("desc") ?
+                Sort.Direction direction = keyDirection.length > 1 &&
+                        keyDirection[1].equalsIgnoreCase("desc") ?
                         Sort.Direction.DESC : Sort.Direction.ASC;
                 orders.add(new Sort.Order(direction, key));
             }

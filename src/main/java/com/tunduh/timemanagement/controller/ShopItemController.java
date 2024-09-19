@@ -1,6 +1,5 @@
 package com.tunduh.timemanagement.controller;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.tunduh.timemanagement.dto.request.ShopItemRequest;
 import com.tunduh.timemanagement.dto.request.PurchaseRequest;
 import com.tunduh.timemanagement.dto.response.ShopItemResponse;
@@ -48,7 +47,8 @@ public class ShopItemController {
     public ResponseEntity<?> getAllShopItems(
             @Parameter(description = "Page number (0-based)") @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "Page size") @RequestParam(defaultValue = "10") int size,
-            @Parameter(description = "Sort parameter (e.g., 'name,asc' or 'price,desc')") @RequestParam(required = false) String sort,
+            @Parameter(description = "Sort parameter (e.g., 'name,asc' or 'price,desc')")
+            @RequestParam(required = false) String sort,
             @Parameter(description = "Filter by name") @RequestParam(required = false) String name,
             @Parameter(description = "Filter by max price") @RequestParam(required = false) Integer maxPrice,
             @Parameter(description = "Filter by category") @RequestParam(required = false) ShopItemEntity.ItemCategory category) {
