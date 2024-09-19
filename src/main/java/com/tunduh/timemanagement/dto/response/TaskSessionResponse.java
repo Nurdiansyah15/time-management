@@ -1,12 +1,14 @@
 package com.tunduh.timemanagement.dto.response;
 
 import com.tunduh.timemanagement.entity.TaskSessionEntity;
+import lombok.Builder;
 import lombok.Data;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
 @Data
+@Builder
 public class TaskSessionResponse implements Serializable {
     private String id;
     private String taskId;

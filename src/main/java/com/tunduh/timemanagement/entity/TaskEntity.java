@@ -40,9 +40,9 @@ public class TaskEntity {
     private String priority;
 
     @ElementCollection
-    @CollectionTable(name = "task_repetition_days", joinColumns = @JoinColumn(name = "task_id"))
-    @Column(name = "day_of_week")
-    private Set<Integer> repetitionDays;
+    @CollectionTable(name = "task_repetition_dates", joinColumns = @JoinColumn(name = "task_id"))
+    @Column(name = "date")
+    private Set<Integer> repetitionDates;
 
     @EnumValidator(enumClass = TaskEntity.RepetitionType.class, message = "Invalid repetition type")
     @Column(name = "repetition_type")
@@ -80,6 +80,6 @@ public class TaskEntity {
     private LocalDateTime updatedAt;
 
     public enum RepetitionType {
-        NONE, DAILY, WEEKLY, MONTHLY, RANGE, LIFETIME
+        NONE, DAILY, WEEKLY, MONTHLY,YEARLY,CUSTOM, RANGE, LIFETIME
     }
 }

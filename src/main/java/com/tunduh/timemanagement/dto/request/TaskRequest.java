@@ -39,11 +39,11 @@ public class TaskRequest {
     @EnumValidator(enumClass = RepetitionType.class, message = "Invalid repetition type")
     private RepetitionType repetitionType;
 
-    @Size(min = 1, max = 7, message = "Repetition days must be between 1 and 7")
-    private Set<@Min(1) @Max(7) Integer> repetitionDays;
+    @Size(min = 1, max = 366, message = "Repetition Dates must be between 1 and 366")
+    private Set<@Min(1) @Max(366) Integer> repetitionDates;
 
     @FutureOrPresent(message = "Repetition start date must be in the present or future")
-    private LocalDate repetitionStartDate;
+    private LocalDateTime repetitionStartDate;
 
     @Future(message = "Repetition end date must be in the future")
     private LocalDateTime repetitionEndDate;

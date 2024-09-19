@@ -55,15 +55,26 @@ public interface TaskRepository extends JpaRepository<TaskEntity, String>, JpaSp
 
     @Query("SELECT t FROM TaskEntity t " +
             "WHERE t.repetitionType = com.tunduh.timemanagement.entity.TaskEntity.RepetitionType.WEEKLY " +
-            "AND :dayOfWeek MEMBER OF t.repetitionDays " +
+            "AND :dayOfWeek MEMBER OF t.repetitionDates " +
             "AND (t.repetitionEndDate IS NULL OR t.repetitionEndDate >= :currentDate)")
     List<TaskEntity> findWeeklyRecurringTasks(@Param("currentDate") LocalDateTime currentDate, @Param("dayOfWeek") int dayOfWeek);
 
     @Query("SELECT t FROM TaskEntity t " +
             "WHERE t.repetitionType = com.tunduh.timemanagement.entity.TaskEntity.RepetitionType.MONTHLY " +
-            "AND DAY(t.createdAt) = DAY(:currentDate) " +
+            "AND :dayOfMonth MEMBER OF t.repetitionDates " +
             "AND (t.repetitionEndDate IS NULL OR t.repetitionEndDate >= :currentDate)")
-    List<TaskEntity> findMonthlyRecurringTasks(@Param("currentDate") LocalDateTime currentDate);
+    List<TaskEntity> findMonthlyRecurringTasks(@Param("currentDate") LocalDateTime currentDate, @Param("dayOfMonth") int dayOfMonth);
+
+    @Query("SELECT t FROM TaskEntity t " +
+            "WHERE t.repetitionType = com.tunduh.timemanagement.entity.TaskEntity.RepetitionType.YEARLY " +
+            "AND :dayOfYear MEMBER OF t.repetitionDates " +
+            "AND (t.repetitionEndDate IS NULL OR t.repetitionEndDate >= :currentDate)")
+    List<TaskEntity> findYearlyRecurringTasks(@Param("currentDate") LocalDateTime currentDate, @Param("dayOfYear") int dayOfYear);
+
+    @Query("SELECT t FROM TaskEntity t " +
+            "WHERE t.repetitionType = com.tunduh.timemanagement.entity.TaskEntity.RepetitionType.CUSTOM " +
+            "AND (t.repetitionEndDate IS NULL OR t.repetitionEndDate >= :currentDate)")
+    List<TaskEntity> findCustomRecurringTasks(@Param("currentDate") LocalDateTime currentDate);
 
     @Query("SELECT new map(DATE(t.createdAt) as date, t.status as status, COUNT(t) as count) " +
             "FROM TaskEntity t " +

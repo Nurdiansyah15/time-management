@@ -1,19 +1,10 @@
 package com.tunduh.timemanagement.service.impl;
 
-import com.tunduh.timemanagement.dto.request.TaskRequest;
-import com.tunduh.timemanagement.dto.request.TaskSessionRequest;
-import com.tunduh.timemanagement.dto.request.TaskSessionSyncRequest;
-import com.tunduh.timemanagement.dto.request.TaskSyncRequest;
-import com.tunduh.timemanagement.dto.response.TaskResponse;
-import com.tunduh.timemanagement.dto.response.TaskSessionResponse;
-import com.tunduh.timemanagement.dto.response.TaskSyncResponse;
-import com.tunduh.timemanagement.entity.TaskEntity;
-import com.tunduh.timemanagement.entity.TaskSessionEntity;
-import com.tunduh.timemanagement.entity.UserEntity;
+import com.tunduh.timemanagement.dto.request.*;
+import com.tunduh.timemanagement.dto.response.*;
+import com.tunduh.timemanagement.entity.*;
 import com.tunduh.timemanagement.exception.ResourceNotFoundException;
-import com.tunduh.timemanagement.repository.TaskRepository;
-import com.tunduh.timemanagement.repository.TaskSessionRepository;
-import com.tunduh.timemanagement.repository.UserRepository;
+import com.tunduh.timemanagement.repository.*;
 import com.tunduh.timemanagement.service.CloudinaryService;
 import com.tunduh.timemanagement.service.TaskService;
 import com.tunduh.timemanagement.utils.pagination.CustomPagination;
@@ -24,25 +15,15 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.time.Duration;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
-import java.time.chrono.ChronoLocalDate;
+import java.time.*;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -54,52 +35,44 @@ public class TaskServiceImpl implements TaskService {
     private final UserRepository userRepository;
     private final CloudinaryService cloudinaryService;
 
-
     @Transactional
     @Override
+    @Scheduled(cron = "0 0 0 * * ?") // Run every day at midnight
     public void generateRecurringTasks() {
-        LocalDateTime now = LocalDateTime.now();
-        List<TaskEntity> recurringTasks = taskRepository.findAllActiveRecurringTasks(now);
+        LocalDate today = LocalDate.now();
+        List<TaskEntity> recurringTasks = taskRepository.findAllActiveRecurringTasks(today.atStartOfDay());
 
         for (TaskEntity task : recurringTasks) {
-            if (shouldGenerateTaskForToday(task, now)) {
-                createNewTaskInstance(task, now);
+            if (shouldGenerateTaskForToday(task, today)) {
+                createNewTaskInstance(task, today);
             }
         }
     }
 
-    private boolean shouldGenerateTaskForToday(TaskEntity task, LocalDateTime now) {
+    private boolean shouldGenerateTaskForToday(TaskEntity task, LocalDate today) {
+        if (today.isBefore(task.getRepetitionStartDate().toLocalDate()) ||
+                (task.getRepetitionEndDate() != null && today.isAfter(task.getRepetitionEndDate().toLocalDate()))) {
+            return false;
+        }
+
         switch (task.getRepetitionType()) {
             case DAILY:
                 return true;
             case WEEKLY:
-                return task.getRepetitionDays().contains(now.getDayOfWeek().getValue());
+                return task.getRepetitionDates().contains(today.getDayOfWeek().getValue());
             case MONTHLY:
-                return now.getDayOfMonth() == task.getCreatedAt().getDayOfMonth();
-            case RANGE:
-                return isWithinRange(task, now);
-            case LIFETIME:
-                return true;
-            case NONE:
+                return task.getRepetitionDates().contains(today.getDayOfMonth());
+            case YEARLY:
+                return task.getRepetitionDates().contains(today.getDayOfYear());
+            case CUSTOM:
+                long daysBetween = ChronoUnit.DAYS.between(task.getRepetitionStartDate().toLocalDate(), today);
+                return daysBetween % task.getRepetitionInterval() == 0;
             default:
                 return false;
         }
     }
 
-    private boolean isWithinRange(TaskEntity task, LocalDateTime now) {
-        if (task.getRepetitionStartDate() == null || task.getRepetitionEndDate() == null || task.getRepetitionInterval() == null) {
-            return false;
-        }
-
-        if (now.isBefore(task.getRepetitionStartDate()) || now.isAfter(task.getRepetitionEndDate())) {
-            return false;
-        }
-
-        long daysSinceStart = ChronoUnit.DAYS.between(task.getRepetitionStartDate(), now);
-        return daysSinceStart % task.getRepetitionInterval() == 0;
-    }
-
-    private void createNewTaskInstance(TaskEntity originalTask, LocalDateTime now) {
+    private void createNewTaskInstance(TaskEntity originalTask, LocalDate today) {
         TaskEntity newTask = TaskEntity.builder()
                 .id(UUID.randomUUID().toString())
                 .title(originalTask.getTitle())
@@ -110,16 +83,15 @@ public class TaskServiceImpl implements TaskService {
                 .priority(originalTask.getPriority())
                 .user(originalTask.getUser())
                 .repetitionType(originalTask.getRepetitionType())
-                .repetitionDays(originalTask.getRepetitionDays())
+                .repetitionDates(originalTask.getRepetitionDates())
                 .repetitionStartDate(originalTask.getRepetitionStartDate())
                 .repetitionEndDate(originalTask.getRepetitionEndDate())
                 .repetitionInterval(originalTask.getRepetitionInterval())
-                .createdAt(now)
-                .updatedAt(now)
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
                 .build();
         taskRepository.save(newTask);
     }
-
 
     @Override
     @Transactional
@@ -205,11 +177,18 @@ public class TaskServiceImpl implements TaskService {
     }
 
     private TaskSessionResponse mapToTaskSessionResponse(TaskSessionEntity session) {
-        TaskSessionResponse response = new TaskSessionResponse();
-        // Map fields from session to response
-        return response;
+        return TaskSessionResponse.builder()
+                .id(session.getId())
+                .taskId(session.getTask().getId())
+                .startTime(session.getStartTime())
+                .endTime(session.getEndTime())
+                .durationInSeconds(session.getDurationInSeconds())
+                .status(session.getStatus())
+                .notes(session.getNotes())
+                .createdAt(session.getCreatedAt())
+                .updatedAt(session.getUpdatedAt())
+                .build();
     }
-
 
     @Override
     @Transactional
@@ -311,43 +290,18 @@ public class TaskServiceImpl implements TaskService {
     }
 
     private TaskSyncResponse createTaskSyncResponse(TaskEntity task, List<TaskSessionEntity> sessions) {
-        TaskSyncResponse response = new TaskSyncResponse();
-        // Set task and session details in the response
-        return response;
-    }
-
-    private boolean shouldGenerateTaskForToday(TaskEntity task, LocalDate today) {
-        switch (task.getRepetitionType()) {
-            case DAILY:
-                return true;
-            case WEEKLY:
-                return task.getRepetitionDays().contains(today.getDayOfWeek().getValue());
-            case MONTHLY:
-                return today.getDayOfMonth() == task.getRepetitionStartDate().getDayOfMonth();
-            case RANGE:
-                return today.isAfter(ChronoLocalDate.from(task.getRepetitionStartDate().minusDays(1))) &&
-                        today.isBefore(ChronoLocalDate.from(task.getRepetitionEndDate().plusDays(1))) &&
-                        (today.toEpochDay() - task.getRepetitionStartDate().toEpochSecond(ZoneOffset.UTC)) % task.getRepetitionInterval() == 0;
-            case LIFETIME:
-                return true;
-            default:
-                return false;
-        }
-    }
-
-    private void createNewTaskInstance(TaskEntity originalTask, LocalDate today) {
-        TaskEntity newTask = TaskEntity.builder()
-                .id(UUID.randomUUID().toString())
-                .title(originalTask.getTitle())
-                .energy(originalTask.getEnergy())
-                .notes(originalTask.getNotes())
-                .status("PENDING")
-                .duration(originalTask.getDuration())
-                .priority(originalTask.getPriority())
-                .user(originalTask.getUser())
+        return TaskSyncResponse.builder()
+                .taskId(task.getId())
+                .title(task.getTitle())
+                .energy(task.getEnergy())
+                .notes(task.getNotes())
+                .status(task.getStatus())
+                .duration(task.getDuration())
+                .priority(task.getPriority())
+                .lastSyncedAt(LocalDateTime.now())
+                .version(task.getVersion())
+                .conflicted(false)
                 .build();
-
-        taskRepository.save(newTask);
     }
 
     @Override
@@ -366,15 +320,68 @@ public class TaskServiceImpl implements TaskService {
                 .duration(taskRequest.getDuration())
                 .priority(taskRequest.getPriority())
                 .repetitionType(taskRequest.getRepetitionType())
-                .repetitionDays(taskRequest.getRepetitionDays())
+                .repetitionDates(taskRequest.getRepetitionDates())
+                .repetitionStartDate(taskRequest.getRepetitionStartDate())
                 .repetitionEndDate(taskRequest.getRepetitionEndDate())
+                .repetitionInterval(taskRequest.getRepetitionInterval())
                 .user(user)
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
                 .build();
 
+        validateAndSetRepetitionDates(task, taskRequest.getRepetitionDates());
+
         TaskEntity savedTask = taskRepository.save(task);
         return mapToTaskResponse(savedTask);
+    }
+
+    private void validateAndSetRepetitionDates(TaskEntity task, Set<Integer> dates) {
+        switch (task.getRepetitionType()) {
+            case DAILY:
+                task.setRepetitionDates(Collections.emptySet());
+                break;
+            case WEEKLY:
+                validateWeeklyDates(dates);
+                task.setRepetitionDates(dates);
+                break;
+            case MONTHLY:
+                validateMonthlyDates(dates);
+                task.setRepetitionDates(dates);
+                break;
+            case YEARLY:
+                validateYearlyDates(dates);
+                task.setRepetitionDates(dates);
+                break;
+            case CUSTOM:
+                if (task.getRepetitionInterval() == null) {
+                    throw new IllegalArgumentException("Repetition interval is required for CUSTOM type");
+                }
+                task.setRepetitionDates(Collections.emptySet());
+                break;
+            case NONE:
+                task.setRepetitionDates(Collections.emptySet());
+                task.setRepetitionStartDate(null);
+                task.setRepetitionEndDate(null);
+                break;
+        }
+    }
+
+    private void validateWeeklyDates(Set<Integer> dates) {
+        if (dates.stream().anyMatch(d -> d < 1 || d > 7)) {
+            throw new IllegalArgumentException("Weekly dates must be between 1 and 7");
+        }
+    }
+
+    private void validateMonthlyDates(Set<Integer> dates) {
+        if (dates.stream().anyMatch(d -> d < 1 || d > 31)) {
+            throw new IllegalArgumentException("Monthly dates must be between 1 and 31");
+        }
+    }
+
+    private void validateYearlyDates(Set<Integer> dates) {
+        if (dates.stream().anyMatch(d -> d < 1 || d > 366)) {
+            throw new IllegalArgumentException("Yearly dates must be between 1 and 366");
+        }
     }
 
     @Override
@@ -407,10 +414,6 @@ public class TaskServiceImpl implements TaskService {
     public TaskResponse getTaskById(String id, String userId) {
         TaskEntity task = taskRepository.findByIdAndUserId(id, userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Task not found for this user"));
-
-        if (task == null) {
-            throw new ResourceNotFoundException("Task not found for this user");
-        }
         return mapToTaskResponse(task);
     }
 
@@ -420,9 +423,6 @@ public class TaskServiceImpl implements TaskService {
     public TaskResponse updateTask(String id, TaskRequest taskRequest, String userId) {
         TaskEntity task = taskRepository.findByIdAndUserId(id, userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Task not found for this user"));
-        if (task == null) {
-            throw new ResourceNotFoundException("Task not found for this user");
-        }
 
         task.setTitle(taskRequest.getTitle());
         task.setEnergy(taskRequest.getEnergy());
@@ -431,9 +431,13 @@ public class TaskServiceImpl implements TaskService {
         task.setDuration(taskRequest.getDuration());
         task.setPriority(taskRequest.getPriority());
         task.setRepetitionType(taskRequest.getRepetitionType());
-        task.setRepetitionDays(taskRequest.getRepetitionDays());
+        task.setRepetitionDates(taskRequest.getRepetitionDates());
+        task.setRepetitionStartDate(taskRequest.getRepetitionStartDate());
         task.setRepetitionEndDate(taskRequest.getRepetitionEndDate());
+        task.setRepetitionInterval(taskRequest.getRepetitionInterval());
         task.setUpdatedAt(LocalDateTime.now());
+
+        validateAndSetRepetitionDates(task, taskRequest.getRepetitionDates());
 
         TaskEntity updatedTask = taskRepository.save(task);
         return mapToTaskResponse(updatedTask);
@@ -445,9 +449,6 @@ public class TaskServiceImpl implements TaskService {
     public void deleteTask(String id, String userId) {
         TaskEntity task = taskRepository.findByIdAndUserId(id, userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Task not found for this user"));
-        if (task == null) {
-            throw new ResourceNotFoundException("Task not found for this user");
-        }
         taskRepository.delete(task);
     }
 
@@ -461,8 +462,10 @@ public class TaskServiceImpl implements TaskService {
                 .duration(task.getDuration())
                 .priority(task.getPriority())
                 .repetitionType(task.getRepetitionType())
-                .repetitionDays(task.getRepetitionDays())
+                .repetitionDates(task.getRepetitionDates())
+                .repetitionStartDate(task.getRepetitionStartDate())
                 .repetitionEndDate(task.getRepetitionEndDate())
+                .repetitionInterval(task.getRepetitionInterval())
                 .taskPicture(task.getTaskPicture())
                 .createdAt(task.getCreatedAt())
                 .updatedAt(task.getUpdatedAt())

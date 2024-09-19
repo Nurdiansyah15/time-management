@@ -25,8 +25,10 @@ public class TaskResponse implements Serializable {
     private Integer duration;
     private String priority;
     private RepetitionType repetitionType;
-    private Set<Integer> repetitionDays;
+    private Set<Integer> repetitionDates;
+    private LocalDateTime repetitionStartDate;
     private LocalDateTime repetitionEndDate;
+    private Integer repetitionInterval;
     private String taskPicture;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
