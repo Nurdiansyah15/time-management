@@ -18,9 +18,9 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class MissionCompletionChecker {
-    private UserMissionRepository userMissionRepository;
-    private TaskRepository taskRepository;
-    private UserRepository userRepository;
+    private final UserMissionRepository userMissionRepository;
+    private final TaskRepository taskRepository;
+    private final UserRepository userRepository;
 
     public void checkAllMissionsForUser(String userId) {
         List<UserMissionEntity> userMissions = userMissionRepository.findByUserId(userId);
