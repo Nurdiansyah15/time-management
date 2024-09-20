@@ -86,6 +86,8 @@ public class UserMissionServiceImpl implements UserMissionService {
 
         UserMissionEntity userMission = UserMissionEntity.builder()
                 .user(user)
+                .isCompleted(false)
+                .isRewardClaimed(false)
                 .mission(mission)
                 .build();
 
