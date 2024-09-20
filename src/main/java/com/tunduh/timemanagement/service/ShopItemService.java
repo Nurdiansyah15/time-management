@@ -14,5 +14,4 @@ public interface ShopItemService {
     ShopItemResponse getShopItemById(String id);
     ShopItemResponse updateShopItem(String id, ShopItemRequest shopItemRequest);
     void deleteShopItem(String id);
-    PurchaseResponse purchaseItem(String itemId, int quantity, String userId);
 }

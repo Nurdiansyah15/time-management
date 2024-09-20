@@ -1,13 +1,17 @@
 package com.tunduh.timemanagement.service.impl;
 
 import com.tunduh.timemanagement.dto.request.UserUpdateRequest;
+import com.tunduh.timemanagement.dto.response.PurchaseResponse;
+import com.tunduh.timemanagement.dto.response.ShopItemResponse;
 import com.tunduh.timemanagement.dto.response.UserResponse;
-import com.tunduh.timemanagement.entity.MissionEntity;
-import com.tunduh.timemanagement.entity.UserEntity;
+import com.tunduh.timemanagement.entity.*;
 import com.tunduh.timemanagement.exception.ResourceNotFoundException;
+import com.tunduh.timemanagement.exception.UnauthorizedException;
 import com.tunduh.timemanagement.repository.MissionRepository;
 import com.tunduh.timemanagement.repository.UserRepository;
 import com.tunduh.timemanagement.service.CloudinaryService;
+import com.tunduh.timemanagement.service.PurchaseService;
+import com.tunduh.timemanagement.service.ShopItemService;
 import com.tunduh.timemanagement.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -20,6 +24,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -29,6 +34,8 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final MissionRepository missionRepository;
     private final CloudinaryService cloudinaryService;
+    private final PurchaseService purchaseService;
+    private final ShopItemService shopItemService;
 
     @Override
     public UserResponse getCurrentUser(String userId) {
@@ -70,6 +77,21 @@ public class UserServiceImpl implements UserService {
         UserEntity updatedUser = userRepository.save(user);
         logger.info("Updated profile picture for user {}", id);
         return mapToUserResponse(updatedUser);
+    }
+
+    @Transactional
+    @Override
+    public UserResponse updateAvatar(String userId, String purchaseId) {
+        UserEntity user = getUserById(userId);
+        PurchaseResponse purchase = purchaseService.getPurchaseById(purchaseId, userId);
+        ShopItemResponse shopItem = shopItemService.getShopItemById(purchase.getShopItemId());
+        if (Objects.equals(purchase.getUserId(), userId)){
+            user.setProfilePicture(shopItem.getItemPicture());
+            UserEntity updatedUser = userRepository.save(user);
+            return mapToUserResponse(updatedUser);
+        } else {
+            throw new UnauthorizedException("You are not authorized to update this avatar.");
+        }
     }
 
     @Override

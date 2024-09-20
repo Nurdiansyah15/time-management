@@ -63,10 +63,19 @@ public class UserController {
 
     @PutMapping("/photo")
     @Operation(summary = "Update user profile photo")
-    public ResponseEntity<?> updatePhoto(@RequestPart("image") MultipartFile file, Authentication authentication) {
+    public ResponseEntity<?> updatePhoto(@RequestParam("image") MultipartFile file, Authentication authentication) {
         UserEntity user = (UserEntity) authentication.getPrincipal();
         logger.info("Updating profile photo for user {}", user.getId());
         UserResponse updatedUser = userService.updatePhoto(file, user.getId());
+        return Response.renderJSON(updatedUser, "Profile photo updated successfully");
+    }
+
+    @PutMapping("/avatar/{purchaseId}")
+    @Operation(summary = "Update user avatar photo")
+    public ResponseEntity<?> updateAvatar(Authentication authentication, @RequestParam String purchaseId) {
+        UserEntity user = (UserEntity) authentication.getPrincipal();
+        logger.info("Updating profile avatar for user {}", user.getId());
+        UserResponse updatedUser = userService.updateAvatar(user.getId(), purchaseId);
         return Response.renderJSON(updatedUser, "Profile photo updated successfully");
     }
 }

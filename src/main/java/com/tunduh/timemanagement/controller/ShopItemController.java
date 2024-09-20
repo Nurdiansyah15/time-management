@@ -78,13 +78,4 @@ public class ShopItemController {
         shopItemService.deleteShopItem(id);
         return Response.renderJSON(null, "Shop item deleted successfully!");
     }
-
-    @PostMapping("/{id}/purchase")
-    @Operation(summary = "Purchase a shop item")
-    public ResponseEntity<?> purchaseItem(@PathVariable String id, @Valid @RequestBody PurchaseRequest purchaseRequest, Authentication authentication) {
-        UserEntity principal = (UserEntity) authentication.getPrincipal();
-        String userId = principal.getId();
-        PurchaseResponse purchaseResponse = shopItemService.purchaseItem(id, purchaseRequest.getQuantity(), userId);
-        return Response.renderJSON(purchaseResponse, "Item purchased successfully!");
-    }
 }

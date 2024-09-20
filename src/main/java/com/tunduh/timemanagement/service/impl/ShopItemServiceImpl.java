@@ -105,43 +105,6 @@ public class ShopItemServiceImpl implements ShopItemService {
         shopItemRepository.delete(shopItem);
     }
 
-    @Override
-    @Transactional
-    public PurchaseResponse purchaseItem(String itemId, int quantity, String userId) {
-        ShopItemEntity shopItem = shopItemRepository.findById(itemId)
-                .orElseThrow(() -> new ResourceNotFoundException("Shop item not found"));
-        UserEntity user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-
-        int totalPrice = shopItem.getPrice() * quantity;
-        if (user.getUserPoint() < totalPrice) {
-            throw new InsufficientPointsException("User does not have enough points to make this purchase");
-        }
-
-        if (shopItem.getStock() < quantity) {
-            throw new IllegalStateException("Not enough stock available");
-        }
-
-        shopItem.setStock(shopItem.getStock() - quantity);
-        shopItemRepository.save(shopItem);
-
-        // Create transaction for purchase
-        transactionService.createTransaction(userId, -totalPrice,
-                TransactionEntity.TransactionType.PURCHASE,
-                "Purchase of " + quantity + " " + shopItem.getName());
-
-        PurchaseEntity purchase = PurchaseEntity.builder()
-                .user(user)
-                .shopItem(shopItem)
-                .quantity(quantity)
-                .totalPrice(totalPrice)
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
-                .build();
-
-        PurchaseEntity savedPurchase = purchaseRepository.save(purchase);
-        return mapToPurchaseResponse(savedPurchase);
-    }
 
     private ShopItemResponse mapToShopItemResponse(ShopItemEntity shopItem) {
         return ShopItemResponse.builder()
