@@ -25,10 +25,6 @@ public interface MissionRepository extends JpaRepository<MissionEntity, String>,
     @Query("SELECT COUNT(um) FROM UserMissionEntity um WHERE um.user.id = :userId AND um.mission.status = :status AND um.isRewardClaimed = false")
     long countByUserIdAndStatusAndIsRewardClaimedFalse(@Param("userId") String userId, @Param("status") MissionEntity.MissionStatus status);
 
-    List<MissionEntity> findByStatus(MissionEntity.MissionStatus status);
-
-    List<MissionEntity> findByStartDateBeforeAndEndDateAfter(LocalDateTime now, LocalDateTime now2);
-
     @Query("SELECT new map(m.status as status, COUNT(um) as count) " +
             "FROM MissionEntity m JOIN m.userMissions um " +
             "WHERE um.user.id = :userId " +

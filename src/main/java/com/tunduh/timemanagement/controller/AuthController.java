@@ -2,13 +2,11 @@ package com.tunduh.timemanagement.controller;
 
 import com.tunduh.timemanagement.dto.request.LoginRequest;
 import com.tunduh.timemanagement.dto.request.RegisterRequest;
-import com.tunduh.timemanagement.security.JwtTokenProvider;
 import com.tunduh.timemanagement.service.AuthService;
 import com.tunduh.timemanagement.utils.response.Response;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;

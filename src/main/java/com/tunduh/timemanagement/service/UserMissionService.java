@@ -4,8 +4,6 @@ import com.tunduh.timemanagement.dto.response.AdminMissionResponse;
 import com.tunduh.timemanagement.dto.response.UserMissionResponse;
 import com.tunduh.timemanagement.utils.pagination.CustomPagination;
 
-import java.util.List;
-
 public interface UserMissionService {
     UserMissionResponse getUserMissionProgress(String userId, String missionId);
     UserMissionResponse claimMission(String userId, String missionId);

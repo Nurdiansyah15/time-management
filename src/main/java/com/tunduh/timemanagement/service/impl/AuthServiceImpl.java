@@ -3,28 +3,22 @@ package com.tunduh.timemanagement.service.impl;
 import com.tunduh.timemanagement.dto.request.LoginRequest;
 import com.tunduh.timemanagement.dto.request.RegisterRequest;
 import com.tunduh.timemanagement.dto.response.AuthResponse;
-import com.tunduh.timemanagement.entity.UserEntity;
 import com.tunduh.timemanagement.entity.Role;
+import com.tunduh.timemanagement.entity.UserEntity;
 import com.tunduh.timemanagement.repository.UserRepository;
 import com.tunduh.timemanagement.security.JwtTokenProvider;
-import com.tunduh.timemanagement.security.CustomOAuth2User;
 import com.tunduh.timemanagement.service.AuthService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 @Service

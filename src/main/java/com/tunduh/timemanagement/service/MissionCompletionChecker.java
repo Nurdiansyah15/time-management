@@ -8,7 +8,6 @@ import com.tunduh.timemanagement.repository.TaskRepository;
 import com.tunduh.timemanagement.repository.UserMissionRepository;
 import com.tunduh.timemanagement.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;

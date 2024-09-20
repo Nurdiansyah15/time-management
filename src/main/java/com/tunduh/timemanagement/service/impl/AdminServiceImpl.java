@@ -13,7 +13,6 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class AdminServiceImpl implements AdminService {
-    private final UserRepository userRepository;
     private final ShopItemService shopItemService;
     private final PurchaseService purchaseService;
 

@@ -1,24 +1,19 @@
 package com.tunduh.timemanagement.controller;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.tunduh.timemanagement.dto.request.SubmissionRequest;
-import com.tunduh.timemanagement.dto.response.AnalyticsResponse;
 import com.tunduh.timemanagement.dto.response.ShopItemResponse;
-import com.tunduh.timemanagement.dto.response.SubmissionResponse;
 import com.tunduh.timemanagement.service.AdminService;
 import com.tunduh.timemanagement.utils.pagination.CustomPagination;
 import com.tunduh.timemanagement.utils.response.Response;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
-
-import java.util.List;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/admin")
