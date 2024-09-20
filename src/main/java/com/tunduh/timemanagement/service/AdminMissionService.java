@@ -3,8 +3,6 @@ package com.tunduh.timemanagement.service;
 import com.tunduh.timemanagement.dto.request.AdminMissionRequest;
 import com.tunduh.timemanagement.dto.response.AdminMissionResponse;
 import com.tunduh.timemanagement.utils.pagination.CustomPagination;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 
 public interface AdminMissionService {
     AdminMissionResponse createMission(AdminMissionRequest request);
