@@ -16,10 +16,13 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -111,6 +114,42 @@ public class AuthServiceImpl implements AuthService {
         }
     }
 
+    @Override
+    public AuthResponse handleGoogleSignIn(String token) {
+        Map<String, Object> tokenInfo = googleTokenValidation(token);
+        String email = (String) tokenInfo.get("email");
+
+        Optional<UserEntity> userByEmail = userRepository.findByEmail(email);
+        if (userByEmail.isPresent()) {
+            var userExist = userRepository.findByEmail(email).orElseThrow(() -> new IllegalArgumentException("User not found when sign in google"));
+
+            String accessToken = jwtTokenProvider.createToken(userExist.getId());
+            String refreshToken = jwtTokenProvider.createRefreshToken(userExist.getId());
+
+            return AuthResponse.builder()
+                    .accessToken(accessToken)
+                    .refreshToken(refreshToken)
+                    .build();
+        } else {
+            Role role = Role.ROLE_USER;
+            UserEntity user = UserEntity.builder()
+                    .username((String) tokenInfo.get("name"))
+                    .email(email)
+                    .role(role)
+                    .password(passwordEncoder.encode("nurdoskepasarmembelisebuahsepedatuadanmobilalphardsehargasejutarupiah"))
+                    .build();
+            UserEntity userResult = userRepository.save(user);
+
+            String accessToken = jwtTokenProvider.createToken(userResult.getId());
+            String refreshToken = jwtTokenProvider.createRefreshToken(userResult.getId());
+
+            return AuthResponse.builder()
+                    .accessToken(accessToken)
+                    .refreshToken(refreshToken)
+                    .build();
+        }
+    }
+
     private List<String> validatePassword(String password) {
         List<String> errors = new ArrayList<>();
 
@@ -131,6 +170,17 @@ public class AuthServiceImpl implements AuthService {
         }
 
         return errors;
+    }
+
+    private Map<String, Object> googleTokenValidation(String token) {
+        String url = "https://oauth2.googleapis.com/tokeninfo?id_token=" + token;
+        RestTemplate restTemplate = new RestTemplate();
+        Map<String, Object> tokenInfo = restTemplate.getForObject(url, Map.class);
+
+        if (tokenInfo == null || tokenInfo.containsKey("error_description")) {
+            throw new IllegalArgumentException("Invalid OAuth token");
+        }
+        return tokenInfo;
     }
 
 }
