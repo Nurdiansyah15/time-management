@@ -1,6 +1,7 @@
 package com.tunduh.timemanagement.dto.request;
 
 import com.tunduh.timemanagement.entity.MissionEntity;
+import jakarta.persistence.Column;
 import lombok.Data;
 import jakarta.validation.constraints.*;
 import java.time.LocalDateTime;
@@ -23,6 +24,9 @@ public class AdminMissionRequest {
 
     @NotNull(message = "Mission type is required")
     private MissionEntity.Type type;
+
+    @NotNull(message = "Mission icon is required")
+    private String missionIcon;
 
     @NotNull(message = "Start date is required")
     private LocalDateTime startDate;

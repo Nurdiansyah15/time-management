@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/admin/missions")
@@ -28,6 +29,12 @@ public class AdminMissionController {
     public ResponseEntity<?> createMission(@Valid @RequestBody AdminMissionRequest request) {
         AdminMissionResponse createdMission = adminMissionService.createMission(request);
         return Response.renderJSON(createdMission, "Mission created successfully");
+    }
+
+    @PutMapping("/{id}/photos")
+    @Operation(summary = "Update shop item photo")
+    public ResponseEntity<?> updatePhoto(@RequestPart("image") MultipartFile file, @PathVariable String id) {
+        return Response.renderJSON(adminMissionService.updatePhoto(file, id), "Photo updated successfully");
     }
 
     @PutMapping("/{id}")

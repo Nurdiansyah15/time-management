@@ -38,6 +38,9 @@ public class MissionEntity {
     @Column(nullable = false)
     private Integer criteriaCompleted;
 
+    @Column(name = "mission_icon")
+    private String missionIcon;
+
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private Type type;

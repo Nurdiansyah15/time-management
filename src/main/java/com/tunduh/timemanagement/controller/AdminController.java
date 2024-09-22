@@ -1,6 +1,7 @@
 package com.tunduh.timemanagement.controller;
 
 import com.tunduh.timemanagement.dto.response.ShopItemResponse;
+import com.tunduh.timemanagement.dto.response.UserResponse;
 import com.tunduh.timemanagement.service.AdminService;
 import com.tunduh.timemanagement.utils.pagination.CustomPagination;
 import com.tunduh.timemanagement.utils.response.Response;
@@ -8,6 +9,9 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -30,6 +34,21 @@ public class AdminController {
 //        AnalyticsResponse analytics = adminService.getUserAnalytics();
 //        return Response.renderJSON(analytics);
 //    }
+
+    @GetMapping
+    @Operation(summary = "Get all users with pagination")
+    public ResponseEntity<?> getAllUsers(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "username,asc") String[] sort) {
+
+        Sort.Direction direction = sort[1].equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
+        Sort sortObj = Sort.by(direction, sort[0]);
+        Pageable pageable = PageRequest.of(page, size, sortObj);
+
+        CustomPagination<UserResponse> users = adminService.getAllUsers(pageable);
+        return Response.renderJSON(users);
+    }
 
     @GetMapping("/shop")
     @Operation(summary = "Get all shop items with pagination and filtering")
