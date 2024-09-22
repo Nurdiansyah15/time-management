@@ -14,4 +14,7 @@ public class UserUpdateRequest {
     @NotBlank(message = "Email is required")
     @Email(message = "Invalid email format")
     private String email;
+
+    @NotBlank(message = "Energy is required")
+    private Integer energy;
 }

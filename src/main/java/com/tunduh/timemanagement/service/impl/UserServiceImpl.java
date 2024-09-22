@@ -52,6 +52,7 @@ public class UserServiceImpl implements UserService {
                 .userPoint(user.getUserPoint())
                 .resetTime(user.getResetTime())
                 .role(user.getRole())
+                .energy(user.getEnergy())
                 .claimedMissions(claimedMissions)
                 .completedMissions(completedMissions)
                 .unclaimedRewards(unclaimedRewards)
@@ -100,6 +101,7 @@ public class UserServiceImpl implements UserService {
         UserEntity user = getUserById(userId);
         user.setUsername(updateRequest.getUsername());
         user.setEmail(updateRequest.getEmail());
+        user.setEnergy(updateRequest.getEnergy());
         UserEntity updatedUser = userRepository.save(user);
         logger.info("Updated user information for user {}", userId);
         return mapToUserResponse(updatedUser);
@@ -145,6 +147,7 @@ public class UserServiceImpl implements UserService {
                 .email(user.getEmail())
                 .profilePicture(user.getProfilePicture())
                 .userPoint(user.getUserPoint())
+                .energy(user.getEnergy())
                 .resetTime(user.getResetTime())
                 .build();
     }
