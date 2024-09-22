@@ -14,6 +14,7 @@ import java.util.Optional;
 @Repository
 public interface TaskSessionRepository extends JpaRepository<TaskSessionEntity, String>, JpaSpecificationExecutor<TaskSessionEntity> {
     Page<TaskSessionEntity> findByTaskId(String taskId, Pageable pageable);
+    List<TaskSessionEntity> findByTaskId(String taskIds);
     void deleteByTaskId(String taskId);
     Optional<TaskSessionEntity> findByIdAndTaskUserId(String sessionId, String userId);
     List<TaskSessionEntity> findByTaskUserIdAndStartTimeAfter(String userId, LocalDateTime startTime);

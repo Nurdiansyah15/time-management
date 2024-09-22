@@ -58,10 +58,11 @@ public class TaskEntity {
     @Column(name = "repetition_interval")
     private Integer repetitionInterval;
 
+    private LocalDateTime completedAt;
+
     @OneToMany(mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<TaskSessionEntity> sessions = new HashSet<>();
 
-//    @Version
     private Long version;
 
     @ManyToOne
