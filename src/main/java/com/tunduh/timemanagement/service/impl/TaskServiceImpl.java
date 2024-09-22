@@ -453,6 +453,7 @@ public class TaskServiceImpl implements TaskService {
     public void deleteTask(String id, String userId) {
         TaskEntity task = taskRepository.findByIdAndUserId(id, userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Task not found for this user"));
+        taskSessionRepository.deleteByTaskId(task.getId());
         taskRepository.delete(task);
     }
 

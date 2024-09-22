@@ -12,5 +12,6 @@ import java.util.Optional;
 @Repository
 public interface TaskSessionRepository extends JpaRepository<TaskSessionEntity, String>, JpaSpecificationExecutor<TaskSessionEntity> {
     Page<TaskSessionEntity> findByTaskId(String taskId, Pageable pageable);
+    void deleteByTaskId(String taskId);
     Optional<TaskSessionEntity> findByIdAndTaskUserId(String sessionId, String userId);
 }
