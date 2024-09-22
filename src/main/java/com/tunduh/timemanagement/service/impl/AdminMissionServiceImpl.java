@@ -40,6 +40,7 @@ public class AdminMissionServiceImpl implements AdminMissionService {
                 .criteriaValue(request.getCriteriaValue())
                 .criteriaCompleted(0)
                 .type(request.getType())
+                .missionIcon(request.getMissionIcon())
                 .startDate(request.getStartDate())
                 .endDate(request.getEndDate())
                 .status(MissionEntity.MissionStatus.ACTIVE)
