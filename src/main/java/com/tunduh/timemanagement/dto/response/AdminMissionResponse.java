@@ -14,6 +14,7 @@ public class AdminMissionResponse {
     private Integer pointReward;
     private Integer criteriaValue;
     private Integer criteriaCompleted;
+    private String missionIcon;
     private MissionEntity.Type type;
     private LocalDateTime startDate;
     private LocalDateTime endDate;

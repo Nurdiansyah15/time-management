@@ -2,10 +2,13 @@ package com.tunduh.timemanagement.service.impl;
 
 import com.tunduh.timemanagement.dto.request.AdminMissionRequest;
 import com.tunduh.timemanagement.dto.response.AdminMissionResponse;
+import com.tunduh.timemanagement.dto.response.ShopItemResponse;
 import com.tunduh.timemanagement.entity.MissionEntity;
+import com.tunduh.timemanagement.entity.ShopItemEntity;
 import com.tunduh.timemanagement.exception.ResourceNotFoundException;
 import com.tunduh.timemanagement.repository.MissionRepository;
 import com.tunduh.timemanagement.service.AdminMissionService;
+import com.tunduh.timemanagement.service.CloudinaryService;
 import com.tunduh.timemanagement.utils.pagination.CustomPagination;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -14,6 +17,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,6 +27,8 @@ import java.util.List;
 public class AdminMissionServiceImpl implements AdminMissionService {
 
     private final MissionRepository missionRepository;
+    private final CloudinaryService cloudinaryService;
+
 
     @Override
     @Transactional
@@ -43,6 +49,17 @@ public class AdminMissionServiceImpl implements AdminMissionService {
 
         return mapToAdminMissionResponse(savedMission);
     }
+
+    @Override
+    public AdminMissionResponse updatePhoto(MultipartFile file, String id) {
+        MissionEntity mission = missionRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Mission not found"));
+        String url = cloudinaryService.uploadFile(file, "shop-item");
+        mission.setMissionIcon(url);
+        MissionEntity updatedMission = missionRepository.save(mission);
+        return mapToAdminMissionResponse(updatedMission);
+    }
+
 
     @Override
     @Transactional
@@ -95,6 +112,7 @@ public class AdminMissionServiceImpl implements AdminMissionService {
                 .pointReward(mission.getPointReward())
                 .criteriaValue(mission.getCriteriaValue())
                 .criteriaCompleted(mission.getCriteriaCompleted())
+                .missionIcon(mission.getMissionIcon())
                 .type(mission.getType())
                 .startDate(mission.getStartDate())
                 .endDate(mission.getEndDate())
