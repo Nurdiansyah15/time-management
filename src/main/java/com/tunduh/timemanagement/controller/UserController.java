@@ -72,7 +72,7 @@ public class UserController {
 
     @PutMapping("/avatar/{purchaseId}")
     @Operation(summary = "Update user avatar photo")
-    public ResponseEntity<?> updateAvatar(Authentication authentication, @RequestParam String purchaseId) {
+    public ResponseEntity<?> updateAvatar(Authentication authentication, @PathVariable String purchaseId) {
         UserEntity user = (UserEntity) authentication.getPrincipal();
         logger.info("Updating profile avatar for user {}", user.getId());
         UserResponse updatedUser = userService.updateAvatar(user.getId(), purchaseId);
