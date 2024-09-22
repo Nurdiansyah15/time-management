@@ -19,6 +19,7 @@ public class UserResponse implements Serializable {
     private String profilePicture;
     private Integer userPoint;
     private LocalTime resetTime;
+    private Integer energy;
     private Role role;
     private long claimedMissions;
     private long completedMissions;

@@ -51,6 +51,8 @@ public class UserEntity implements UserDetails {
 
     private LocalTime resetTime;
 
+    private Integer energy;
+
     private LocalDate lastResetDate;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)

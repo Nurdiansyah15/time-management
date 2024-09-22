@@ -15,6 +15,7 @@ import com.tunduh.timemanagement.repository.TaskRepository;
 import com.tunduh.timemanagement.repository.TaskSessionRepository;
 import com.tunduh.timemanagement.repository.UserRepository;
 import com.tunduh.timemanagement.service.CloudinaryService;
+import com.tunduh.timemanagement.service.EnergyManagementService;
 import com.tunduh.timemanagement.service.TaskService;
 import com.tunduh.timemanagement.utils.pagination.CustomPagination;
 import com.tunduh.timemanagement.utils.specification.TaskSpecification;
@@ -46,6 +47,7 @@ public class TaskServiceImpl implements TaskService {
     private final TaskSessionRepository taskSessionRepository;
     private final UserRepository userRepository;
     private final CloudinaryService cloudinaryService;
+    private final EnergyManagementService energyManagementService;
 
     @Transactional
     @Override
@@ -157,7 +159,32 @@ public class TaskServiceImpl implements TaskService {
             session.setDurationInSeconds(session.getDurationInSeconds() +
                     Duration.between(session.getStartTime(), session.getEndTime()).getSeconds());
         }
-        return mapToTaskSessionResponse(taskSessionRepository.save(session));
+
+        TaskSessionEntity savedSession = taskSessionRepository.save(session);
+
+        TaskEntity task = session.getTask();
+        energyManagementService.decreaseEnergy(userId, task.getEnergy());
+
+        checkAndUpdateTaskCompletion(session.getTask());
+
+        return mapToTaskSessionResponse(savedSession);
+    }
+
+    private void checkAndUpdateTaskCompletion(TaskEntity task) {
+        long totalSessionDuration = taskSessionRepository.findByTaskId(task.getId()).stream()
+                .filter(session -> session.getStatus() == TaskSessionEntity.SessionStatus.COMPLETED)
+                .mapToLong(TaskSessionEntity::getDurationInSeconds)
+                .sum();
+
+        long taskDurationInSeconds = task.getDuration() * 60L; // Convert minutes to seconds
+
+        if (totalSessionDuration >= taskDurationInSeconds && !task.getStatus().equals("COMPLETED")) {
+            task.setStatus("COMPLETED");
+            task.setCompletedAt(LocalDateTime.now());
+            taskRepository.save(task);
+            log.info("Task {} marked as completed. Total session duration: {} seconds, Required duration: {} seconds",
+                    task.getId(), totalSessionDuration, taskDurationInSeconds);
+        }
     }
 
     @Override
