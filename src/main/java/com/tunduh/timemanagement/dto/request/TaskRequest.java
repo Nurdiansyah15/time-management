@@ -42,10 +42,10 @@ public class TaskRequest {
     @Size(min = 1, max = 366, message = "Repetition Dates must be between 1 and 366")
     private Set<@Min(1) @Max(366) Integer> repetitionDates;
 
-    @FutureOrPresent(message = "Repetition start date must be in the present or future")
+//    @FutureOrPresent(message = "Repetition start date must be in the present or future")
     private LocalDateTime repetitionStartDate;
 
-    @FutureOrPresent(message = "Repetition end date must be in the future")
+//    @FutureOrPresent(message = "Repetition end date must be in the future")
     private LocalDateTime repetitionEndDate;
 
     @Min(value = 1, message = "Repetition interval must be at least 1")

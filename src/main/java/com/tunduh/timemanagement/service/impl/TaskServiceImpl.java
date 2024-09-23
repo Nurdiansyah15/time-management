@@ -349,6 +349,16 @@ public class TaskServiceImpl implements TaskService {
         UserEntity user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
+        LocalDate now = LocalDate.now();
+
+        if (taskRequest.getRepetitionStartDate() != null && taskRequest.getRepetitionStartDate().isBefore(now.atStartOfDay())) {
+            throw new IllegalArgumentException("Repetition start date must be today or in the future.");
+        }
+
+        if (taskRequest.getRepetitionEndDate() != null && taskRequest.getRepetitionEndDate().isBefore(now.atStartOfDay())) {
+            throw new IllegalArgumentException("Repetition end date must be today or in the future.");
+        }
+
         TaskEntity task = TaskEntity.builder()
                 .id(UUID.randomUUID().toString())
                 .title(taskRequest.getTitle())
@@ -455,6 +465,16 @@ public class TaskServiceImpl implements TaskService {
     public TaskResponse updateTask(String id, TaskRequest taskRequest, String userId) {
         TaskEntity task = taskRepository.findByIdAndUserId(id, userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Task not found for this user"));
+
+        LocalDate now = LocalDate.now();
+
+        if (taskRequest.getRepetitionStartDate() != null && taskRequest.getRepetitionStartDate().isBefore(now.atStartOfDay())) {
+            throw new IllegalArgumentException("Repetition start date must be today or in the future.");
+        }
+
+        if (taskRequest.getRepetitionEndDate() != null && taskRequest.getRepetitionEndDate().isBefore(now.atStartOfDay())) {
+            throw new IllegalArgumentException("Repetition end date must be today or in the future.");
+        }
 
         task.setTitle(taskRequest.getTitle());
         task.setEnergy(taskRequest.getEnergy());
