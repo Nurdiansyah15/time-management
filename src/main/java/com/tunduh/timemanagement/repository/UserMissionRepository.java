@@ -18,5 +18,7 @@ public interface UserMissionRepository extends JpaRepository<UserMissionEntity, 
 
     List<UserMissionEntity> findByUserId(String userId);
 
+    Page<UserMissionEntity> findByUserId(String userId, Pageable pageable);
+
     Page<UserMissionEntity> findByUserIdAndIsCompleted(String userId, boolean b, Pageable pageable);
 }

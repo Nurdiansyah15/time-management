@@ -1,5 +1,7 @@
 package com.tunduh.timemanagement.dto.response;
 
+import com.tunduh.timemanagement.entity.MissionEntity;
+import com.tunduh.timemanagement.entity.UserMissionEntity;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -16,6 +18,9 @@ public class UserMissionResponse {
     private String userId;
     private String missionId;
     private String missionName;
+    private String missionIcon;
+    private String missionDescription;
+    private Integer missionPoint;
     private Boolean isCompleted;
     private Boolean isRewardClaimed;
     private LocalDateTime completedAt;
