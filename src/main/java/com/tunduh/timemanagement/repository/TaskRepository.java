@@ -23,6 +23,8 @@ public interface TaskRepository extends JpaRepository<TaskEntity, String>, JpaSp
     long countByUserId(String userId);
     long countByUserIdAndStatus(String userId, String status);
 
+    long countByUserIdAndStatusAndCreatedAtAfter(String userId, String status, LocalDateTime startTime);
+
     List<TaskEntity> findByIdIn(List<String> taskIds);
 
     @Query("SELECT new map(DATE(t.createdAt) as date, COUNT(t) as count) " +

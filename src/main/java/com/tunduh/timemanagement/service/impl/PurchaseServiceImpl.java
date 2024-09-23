@@ -51,6 +51,7 @@ public class PurchaseServiceImpl implements PurchaseService {
                 .shopItem(shopItem)
                 .quantity(request.getQuantity())
                 .totalPrice(totalPrice)
+                .purchasePicture(shopItem.getItemPicture())
                 .build();
 
         PurchaseEntity savedPurchase = purchaseRepository.save(purchase);
@@ -104,6 +105,7 @@ public class PurchaseServiceImpl implements PurchaseService {
                 .shopItemName(purchase.getShopItem().getName())
                 .quantity(purchase.getQuantity())
                 .totalPrice(purchase.getTotalPrice())
+                .purchasePicture(purchase.getPurchasePicture())
                 .createdAt(purchase.getCreatedAt())
                 .build();
     }

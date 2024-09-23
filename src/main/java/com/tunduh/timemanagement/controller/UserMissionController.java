@@ -50,6 +50,34 @@ public class UserMissionController {
         return Response.renderJSON(claimedMissions, "Claimed missions retrieved successfully");
     }
 
+    @GetMapping("/claimed/completed")
+    @Operation(summary = "Get all claimed missions for the current user with pagination")
+    public ResponseEntity<?> getClaimedMissionCompleted(
+            Authentication authentication,
+            @Parameter(description = "Page number (0-based)") @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Page size") @RequestParam(defaultValue = "10") int size
+    ) {
+        UserEntity user = (UserEntity) authentication.getPrincipal();
+
+        CustomPagination<UserMissionResponse> claimedMissions = userMissionService.getClaimedMissionCompleted(user.getId(), page, size);
+
+        return Response.renderJSON(claimedMissions, "Claimed missions retrieved successfully");
+    }
+
+    @GetMapping("/claimed/notCompleted")
+    @Operation(summary = "Get all claimed missions for the current user with pagination")
+    public ResponseEntity<?> getClaimedMissionNotCompleted(
+            Authentication authentication,
+            @Parameter(description = "Page number (0-based)") @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Page size") @RequestParam(defaultValue = "10") int size
+    ) {
+        UserEntity user = (UserEntity) authentication.getPrincipal();
+
+        CustomPagination<UserMissionResponse> claimedMissions = userMissionService.getClaimedMissionNotCompleted(user.getId(), page, size);
+
+        return Response.renderJSON(claimedMissions, "Claimed missions retrieved successfully");
+    }
+
     @GetMapping("/{missionId}")
     @Operation(summary = "Get specific mission progress for the current user")
     public ResponseEntity<?> getUserMissionProgress(@PathVariable String missionId, Authentication authentication) {

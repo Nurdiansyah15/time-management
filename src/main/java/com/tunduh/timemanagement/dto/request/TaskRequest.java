@@ -45,7 +45,7 @@ public class TaskRequest {
     @FutureOrPresent(message = "Repetition start date must be in the present or future")
     private LocalDateTime repetitionStartDate;
 
-    @Future(message = "Repetition end date must be in the future")
+    @FutureOrPresent(message = "Repetition end date must be in the future")
     private LocalDateTime repetitionEndDate;
 
     @Min(value = 1, message = "Repetition interval must be at least 1")
