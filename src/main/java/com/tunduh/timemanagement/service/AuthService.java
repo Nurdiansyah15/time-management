@@ -13,4 +13,6 @@ public interface AuthService {
 
     AuthResponse refreshToken(String refreshToken);
 
+    AuthResponse handleGoogleSignIn(String token);
+
 }
