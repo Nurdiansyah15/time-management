@@ -2,6 +2,9 @@ package com.tunduh.timemanagement.controller;
 
 import com.tunduh.timemanagement.dto.request.LoginRequest;
 import com.tunduh.timemanagement.dto.request.RegisterRequest;
+import com.tunduh.timemanagement.dto.response.AuthResponse;
+import com.tunduh.timemanagement.entity.UserEntity;
+import com.tunduh.timemanagement.repository.UserRepository;
 import com.tunduh.timemanagement.service.AuthService;
 import com.tunduh.timemanagement.utils.response.Response;
 import jakarta.validation.Valid;
@@ -12,9 +15,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.Collections;
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -33,6 +38,14 @@ public class AuthController {
         log.info("Login request: {}", req.getEmail());
         return Response.renderJSON(
                 authService.login(req)
+        );
+    }
+
+    @PostMapping("/oauth2/token")
+    public ResponseEntity<?> handleOAuth2Login(@RequestParam("token") String token) {
+        log.info("token request: {}", token);
+        return Response.renderJSON(
+                authService.handleGoogleSignIn(token)
         );
     }
 
