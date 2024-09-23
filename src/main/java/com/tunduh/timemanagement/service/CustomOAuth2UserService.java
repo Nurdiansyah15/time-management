@@ -14,6 +14,7 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalTime;
 import java.util.UUID;
 
 @Service
@@ -71,6 +72,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         user.setUsername(getName(oauth2User));
         user.setEnergy(100);
         user.setUserPoint(0);
+         user.setResetTime(LocalTime.of(0,0,0));
         user.setPassword(passwordEncoder.encode(generateRandomPassword()));
         user.setRole(Role.ROLE_USER);
         return userRepository.save(user);

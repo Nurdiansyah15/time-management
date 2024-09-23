@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -80,6 +81,7 @@ public class AuthServiceImpl implements AuthService {
                 .role(role)
                 .energy(100)
                 .userPoint(0)
+                .resetTime(LocalTime.of(0,0,0))
                 .password(passwordEncoder.encode(req.getPassword()))
                 .build();
 
