@@ -21,7 +21,7 @@ public class OpenApiConfig {
             .description("Development Server")
             .url("http://localhost:8080");
     Server publicServer = new Server()
-            .url("http://10.10.103.228:8080")
+            .url("http://10.10.103.227:8080")
             .description("Production Server");
 
 

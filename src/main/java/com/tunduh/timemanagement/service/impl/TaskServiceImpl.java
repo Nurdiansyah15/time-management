@@ -153,12 +153,12 @@ public class TaskServiceImpl implements TaskService {
         if (session.getStatus() == TaskSessionEntity.SessionStatus.COMPLETED) {
             throw new IllegalStateException("Task is already completed");
         }
-        session.setStatus(TaskSessionEntity.SessionStatus.COMPLETED);
         session.setEndTime(LocalDateTime.now());
         if (session.getStatus() == TaskSessionEntity.SessionStatus.IN_PROGRESS) {
             session.setDurationInSeconds(session.getDurationInSeconds() +
                     Duration.between(session.getStartTime(), session.getEndTime()).getSeconds());
         }
+        session.setStatus(TaskSessionEntity.SessionStatus.COMPLETED);
 
         TaskSessionEntity savedSession = taskSessionRepository.save(session);
 
