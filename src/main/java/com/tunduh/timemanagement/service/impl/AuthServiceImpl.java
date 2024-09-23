@@ -75,8 +75,11 @@ public class AuthServiceImpl implements AuthService {
                 .username(req.getUsername())
                 .email(req.getEmail())
                 .role(role)
+                .energy(100)
+                .userPoint(0)
                 .password(passwordEncoder.encode(req.getPassword()))
                 .build();
+
         UserEntity userResult = userRepository.save(user);
 
         String accessToken = jwtTokenProvider.createToken(userResult.getId());
