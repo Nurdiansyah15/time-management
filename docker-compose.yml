@@ -1,9 +1,8 @@
 version: '3.8'
+
 services:
-  app:
-    build:
-      context: .
-      dockerfile: Dockerfile
+  backend:
+    image: finkurniawan/tbem-backend:v1.0.0
     ports:
       - "8080:8080"
     environment:
@@ -19,7 +18,18 @@ services:
       - db
       - redis
     networks:
-      - spring-network
+      - app-network
+
+  frontend:
+    image: finkurniawan/tbem-frontend:v1.0.0
+    ports:
+      - "3000:3000"
+    environment:
+      - REACT_APP_API_URL=http://backend:8080
+    depends_on:
+      - backend
+    networks:
+      - app-network
 
   db:
     image: postgres:13
@@ -30,17 +40,17 @@ services:
     volumes:
       - postgres-data:/var/lib/postgresql/data
     networks:
-      - spring-network
+      - app-network
 
   redis:
     image: redis:6.2-alpine
     ports:
       - "6379:6379"
     networks:
-      - spring-network
+      - app-network
 
 networks:
-  spring-network:
+  app-network:
     driver: bridge
 
 volumes:
