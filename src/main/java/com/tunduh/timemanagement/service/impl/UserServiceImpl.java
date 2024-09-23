@@ -63,7 +63,7 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public UserResponse addPoints(String userId, int points) {
         UserEntity user = getUserById(userId);
-        user.setUserPoint(user.getUserPoint() + points);
+        user.setUserPoint(user.getUserPoint() != null ? user.getUserPoint() + points : points);
         UserEntity updatedUser = userRepository.save(user);
         logger.info("Added {} points to user {}", points, userId);
         return mapToUserResponse(updatedUser);
