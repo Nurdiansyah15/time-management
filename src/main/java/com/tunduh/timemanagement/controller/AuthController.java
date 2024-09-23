@@ -41,9 +41,9 @@ public class AuthController {
         );
     }
 
+
     @PostMapping("/oauth2/token")
     public ResponseEntity<?> handleOAuth2Login(@RequestParam("token") String token) {
-        log.info("token request: {}", token);
         return Response.renderJSON(
                 authService.handleGoogleSignIn(token)
         );
