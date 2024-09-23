@@ -72,7 +72,7 @@ public class SecurityConfig {
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/", "/error", "/webjars/**", "/api/auth/login", "/api/auth/login", "/oauth2/**").permitAll()
+                        .requestMatchers("/", "/error", "/webjars/**", "/api/auth/login", "/api/auth/login","/api/auth/register", "/oauth2/**").permitAll()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html", "/swagger-ui/index.html", "/v3/**").permitAll()
                         .requestMatchers("/actuator/**", "/actuator/loggers").permitAll()
                         .requestMatchers("/error-500").permitAll()
