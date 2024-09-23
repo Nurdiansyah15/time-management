@@ -1,7 +1,12 @@
 package com.tunduh.timemanagement.controller;
 
+import com.tunduh.timemanagement.dto.request.AnalyticsRequest;
+import com.tunduh.timemanagement.dto.response.AnalyticsDataOverallResponse;
+import com.tunduh.timemanagement.dto.response.AnalyticsDataResponse;
+import com.tunduh.timemanagement.dto.response.OverallStats;
 import com.tunduh.timemanagement.dto.response.UserAnalyticsResponse;
 import com.tunduh.timemanagement.entity.UserEntity;
+import com.tunduh.timemanagement.service.AnalyticsService;
 import com.tunduh.timemanagement.service.UserAnalyticsService;
 import com.tunduh.timemanagement.utils.response.Response;
 import io.swagger.v3.oas.annotations.Operation;
@@ -21,6 +26,25 @@ import java.time.LocalDate;
 public class UserAnalyticsController {
 
     private final UserAnalyticsService userAnalyticsService;
+    private final AnalyticsService analyticsService;
+
+    @GetMapping
+    public ResponseEntity<AnalyticsDataResponse> getAnalytics(
+            Authentication authentication,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate
+    ) {
+        UserEntity user = (UserEntity) authentication.getPrincipal();
+        AnalyticsDataResponse analyticsDTO = analyticsService.getAnalytics(user.getId(), startDate, endDate);
+        return ResponseEntity.ok(analyticsDTO);
+    }
+
+    @GetMapping("/overall")
+    public ResponseEntity<OverallStats> getOverallAnalytics(Authentication authentication) {
+        UserEntity user = (UserEntity) authentication.getPrincipal();
+        OverallStats analyticsDTO = analyticsService.getOverallStats(user.getId());
+        return ResponseEntity.ok(analyticsDTO);
+    }
 
     @GetMapping("/dashboard")
     @Operation(summary = "Get user analytics dashboard")
