@@ -10,5 +10,7 @@ public interface UserMissionService {
     UserMissionResponse completeMission(String userId, String missionId);
     UserMissionResponse claimMissionReward(String userId, String missionId);
     CustomPagination<UserMissionResponse> getClaimedMissions(String userId, int page, int size);
+    CustomPagination<UserMissionResponse> getClaimedMissionCompleted(String userId, int page, int size);
+    CustomPagination<UserMissionResponse> getClaimedMissionNotCompleted(String userId, int page, int size);
     CustomPagination<AdminMissionResponse> getAvailableMissions(String userId, int page, int size);
 }

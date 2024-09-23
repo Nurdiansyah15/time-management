@@ -58,6 +58,28 @@ public class UserMissionServiceImpl implements UserMissionService {
     public CustomPagination<UserMissionResponse> getClaimedMissions(String userId, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
 
+        Page<UserMissionEntity> claimedMissionsPage = userMissionRepository.findByUserId(userId, pageable);
+
+        missionCompletionChecker.checkAllMissionsForUser(userId);
+
+        return new CustomPagination<>(claimedMissionsPage.map(this::mapToUserMissionResponse));
+    }
+
+    @Override
+    public CustomPagination<UserMissionResponse> getClaimedMissionCompleted(String userId, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+
+        Page<UserMissionEntity> claimedMissionsPage = userMissionRepository.findByUserIdAndIsCompleted(userId, true, pageable);
+
+        missionCompletionChecker.checkAllMissionsForUser(userId);
+
+        return new CustomPagination<>(claimedMissionsPage.map(this::mapToUserMissionResponse));
+    }
+
+    @Override
+    public CustomPagination<UserMissionResponse> getClaimedMissionNotCompleted(String userId, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+
         Page<UserMissionEntity> claimedMissionsPage = userMissionRepository.findByUserIdAndIsCompleted(userId, false, pageable);
 
         missionCompletionChecker.checkAllMissionsForUser(userId);
@@ -89,6 +111,7 @@ public class UserMissionServiceImpl implements UserMissionService {
                 .isCompleted(false)
                 .isRewardClaimed(false)
                 .mission(mission)
+                .userMissionIcon(mission.getMissionIcon())
                 .build();
 
         UserMissionEntity savedUserMission = userMissionRepository.save(userMission);
@@ -159,6 +182,9 @@ public class UserMissionServiceImpl implements UserMissionService {
                 .userId(userMission.getUser().getId())
                 .missionId(userMission.getMission().getId())
                 .missionName(userMission.getMission().getName())
+                .missionIcon(userMission.getMission().getMissionIcon())
+                .missionDescription(userMission.getMission().getDescription())
+                .missionPoint(userMission.getMission().getPointReward())
                 .isCompleted(userMission.getIsCompleted())
                 .isRewardClaimed(userMission.getIsRewardClaimed())
                 .completedAt(userMission.getCompletedAt())

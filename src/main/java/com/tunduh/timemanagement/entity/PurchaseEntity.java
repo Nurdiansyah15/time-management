@@ -31,6 +31,10 @@ public class PurchaseEntity {
     @Column(nullable = false)
     private Integer totalPrice;
 
+    @Column(name = "purchase_picture")
+    private String purchasePicture;
+
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;

@@ -19,5 +19,6 @@ public class PurchaseResponse implements Serializable {
     private String shopItemName;
     private Integer quantity;
     private Integer totalPrice;
+    private String purchasePicture;
     private LocalDateTime createdAt;
 }

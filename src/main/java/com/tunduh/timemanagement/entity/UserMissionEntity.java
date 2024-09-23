@@ -39,6 +39,9 @@ public class UserMissionEntity {
 
     private LocalDateTime rewardClaimedAt;
 
+    @Column(name = "user_mission_icon")
+    private String userMissionIcon;
+
     @CreationTimestamp
     private LocalDateTime createdAt;
 
